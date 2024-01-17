@@ -277,7 +277,7 @@ namespace HpToolsLauncher
                     }
 
                     // Check for required Addins
-                    LoadNeededAddins(testPath);
+                    //LoadNeededAddins(testPath);
 
                     // set Mc connection and other mobile info into rack if neccesary
                     #region Mc connection and other mobile info
@@ -345,13 +345,12 @@ namespace HpToolsLauncher
 
                     #endregion
 
-
                     if (!_qtpApplication.Launched)
                     {
                         if (_runCancelled())
                         {
                             QTPTestCleanup();
-                            KillQtp();
+                            //KillQtp();
                             runDesc.TestState = TestState.Error;
                             return runDesc;
                         }
@@ -485,8 +484,8 @@ namespace HpToolsLauncher
                 }
 
                 //if the app is running, close it.
-                if (_qtpApplication.Launched)
-                    _qtpApplication.Quit();
+                //if (_qtpApplication.Launched)
+                //    _qtpApplication.Quit();
             }
             catch
             {
@@ -652,7 +651,7 @@ namespace HpToolsLauncher
                 if (_runCancelled())
                 {
                     QTPTestCleanup();
-                    KillQtp();
+                    //KillQtp();
                     testResults.TestState = TestState.Error;
                     testResults.ErrorDesc = Resources.GeneralTestCanceled;
                     ConsoleWriter.WriteLine(Resources.GeneralTestCanceled);
@@ -702,7 +701,7 @@ namespace HpToolsLauncher
             }
             catch (SystemException e)
             {
-                KillQtp();
+                //KillQtp();
                 ConsoleWriter.WriteLine(string.Format(Resources.GeneralErrorWithStack, e.Message, e.StackTrace));
                 testResults.TestState = TestState.Error;
                 testResults.ErrorDesc = Resources.QtpRunError;
@@ -807,7 +806,7 @@ namespace HpToolsLauncher
                 if (_runCancelled())
                 {
                     QTPTestCleanup();
-                    KillQtp();
+                    //KillQtp();
                     return false;
                 }
 
