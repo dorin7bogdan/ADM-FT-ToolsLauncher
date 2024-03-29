@@ -81,18 +81,22 @@ namespace HpToolsLauncher.ParallelRunner
         private const char EnvironmentKeyValueSeparator = ':';
 
         // environment keys
-        private const string DeviceIdKey = "deviceId";
-        private const string ManufacturerAndModelKey = "manufacturerAndModel";
+        private const string DeviceIdKey = "deviceid";
+        private const string ManufacturerAndModelKey = "manufacturerandmodel";
         private const string ManufacturerKey = "manufacturer";
         private const string ModelKey = "model";
-        private const string OsVersionKey = "osVersion";
-        private const string OsTypeKey = "osType";
+        private const string OsVersionKey = "osversion";
+        private const string OsTypeKey = "ostype";
         private const string BrowserKey = "browser";
 
         // parallel runner config specific constants
         private const string WebLab = "LocalBrowser";
         private const string MobileCenterLab = "MobileCenter";
         private const string ACCESS_KEY_FORMAT = "client={0};secret={1};tenant={2}";
+
+        private const string SYSTEM = "system";
+        private const string HTTP = "http";
+        private const string HTTPS = "https";
 
         // the list of mobile properties
         private static readonly IList<string> MobileProperties = new List<string>
@@ -114,7 +118,7 @@ namespace HpToolsLauncher.ParallelRunner
         {
             Dictionary<string, string> dictionary = [];
 
-            if (string.IsNullOrEmpty(environment))
+            if (environment.IsNullOrEmpty())
                 return dictionary;
 
             // the environment could be : "deviceId : 12412"
@@ -136,16 +140,15 @@ namespace HpToolsLauncher.ParallelRunner
 
                 string key = keyValuePair[0].Trim().ToLower();
 
-                if (string.IsNullOrEmpty(key)) continue;
+                if (key.IsNullOrEmpty()) continue;
 
                 // we will also consider the case when we have something like
                 // "manufacturerAndModel : some:string:separated"
                 // so the first one will be the key and the rest will be the value
-                string value = string.Join("", keyValuePair.Skip(1).ToArray())
-                    .Trim();
-                
+                string value = string.Join(string.Empty, keyValuePair.Skip(1).ToArray()).Trim();
+
                 // must have a value
-                if (string.IsNullOrEmpty(value)) continue;
+                if (value.IsNullOrEmpty()) continue;
 
                 dictionary[key] = value;
             }
@@ -165,57 +168,57 @@ namespace HpToolsLauncher.ParallelRunner
             // invalid environment string
             if (dictionary.Count == 0) return null;
 
-            var device = new Device();
+            Device device = new();
 
-            var mobileEnvironment = new MobileEnvironment
+            MobileEnvironment mobileEnvironment = new()
             {
                 device = device,
                 lab = MobileCenterLab
             };
 
-            if (dictionary.ContainsKey(DeviceIdKey.ToLower()))
+            if (dictionary.ContainsKey(DeviceIdKey))
             {
-                if (!string.IsNullOrEmpty(dictionary[DeviceIdKey.ToLower()]))
+                if (!dictionary[DeviceIdKey].IsNullOrEmpty())
                 {
-                    device.deviceID = dictionary[DeviceIdKey.ToLower()];
+                    device.deviceID = dictionary[DeviceIdKey];
                 }
             }
 
-            if (dictionary.ContainsKey(ManufacturerAndModelKey.ToLower()) && !string.IsNullOrEmpty(dictionary[ManufacturerAndModelKey.ToLower()]))
+            if (dictionary.ContainsKey(ManufacturerAndModelKey) && !dictionary[ManufacturerAndModelKey].IsNullOrEmpty())
             {
-                device.manufacturer = dictionary[ManufacturerAndModelKey.ToLower()];
+                device.manufacturer = dictionary[ManufacturerAndModelKey];
             }
             else
             {
-                if (dictionary.ContainsKey(ManufacturerKey.ToLower()) && !string.IsNullOrEmpty(dictionary[ManufacturerKey.ToLower()]))
+                if (dictionary.ContainsKey(ManufacturerKey) && !dictionary[ManufacturerKey].IsNullOrEmpty())
                 {
-                    device.manufacturer = dictionary[ManufacturerKey.ToLower()];
+                    device.manufacturer = dictionary[ManufacturerKey];
                 }
-                if (dictionary.ContainsKey(ModelKey.ToLower()) && !string.IsNullOrEmpty(dictionary[ModelKey.ToLower()]))
+                if (dictionary.ContainsKey(ModelKey) && !dictionary[ModelKey].IsNullOrEmpty())
                 {
-                    device.model = dictionary[ModelKey.ToLower()];
-                }
-            }
-
-            if (dictionary.ContainsKey(OsVersionKey.ToLower()))
-            {
-                if (!string.IsNullOrEmpty(dictionary[OsVersionKey.ToLower()]))
-                {
-                    device.osVersion = dictionary[OsVersionKey.ToLower()];
+                    device.model = dictionary[ModelKey];
                 }
             }
 
-            if (dictionary.ContainsKey(OsTypeKey.ToLower()))
+            if (dictionary.ContainsKey(OsVersionKey))
             {
-                if (!string.IsNullOrEmpty(dictionary[OsTypeKey.ToLower()]))
+                if (!dictionary[OsVersionKey].IsNullOrEmpty())
                 {
-                    device.osType = dictionary[OsTypeKey.ToLower()];
+                    device.osVersion = dictionary[OsVersionKey];
+                }
+            }
+
+            if (dictionary.ContainsKey(OsTypeKey))
+            {
+                if (!dictionary[OsTypeKey].IsNullOrEmpty())
+                {
+                    device.osType = dictionary[OsTypeKey];
                 }
             }
 
             // the environment string should contain at least a valid property
             // in order for PrallelRunner to be able to query MC for the specific device
-            if(device.deviceID == null && (device.osType == null && device.osVersion == null && device.manufacturer == null && device.model == null))
+            if (device.deviceID == null && (device.osType == null && device.osVersion == null && device.manufacturer == null && device.model == null))
             {
                 return null;
             }
@@ -235,16 +238,16 @@ namespace HpToolsLauncher.ParallelRunner
 
             var dictionary = GetEnvironmentProperties(environment);
 
-            if (!dictionary.ContainsKey(BrowserKey.ToLower())) return null;
+            if (!dictionary.ContainsKey(BrowserKey)) return null;
 
-            WebEnvironment webEnvironment = new WebEnvironment { lab = WebLab };
+            WebEnvironment webEnvironment = new() { lab = WebLab };
 
-            var browser = dictionary[BrowserKey.ToLower()].Trim();
+            var browser = dictionary[BrowserKey].Trim();
 
             // try to find a browser that matches the one provided
-            foreach(var browserName in BrowserNames)
+            foreach (var browserName in BrowserNames)
             {
-                if(string.Equals(browserName,browser,StringComparison.CurrentCultureIgnoreCase))
+                if (string.Equals(browserName, browser, StringComparison.CurrentCultureIgnoreCase))
                 {
                     webEnvironment.browser = browserName;
                     return webEnvironment;
@@ -257,13 +260,13 @@ namespace HpToolsLauncher.ParallelRunner
         /// <summary>
         /// Check if a given propery is part of the mobile properties.
         /// </summary>
-        /// <param name="property"> the property to check </param>
+        /// <param name="prop"> the property to check </param>
         /// <returns>true if the given property is a mobile prop, false otherwise </returns>
-        public static bool IsKnownMobileProperty(string property)
+        public static bool IsKnownMobileProperty(string prop)
         {
             foreach (var knownProp in MobileProperties)
             {
-                if (knownProp.ToLower() == property.ToLower())
+                if (knownProp == prop.ToLower())
                 {
                     return true;
                 }
@@ -279,28 +282,28 @@ namespace HpToolsLauncher.ParallelRunner
         /// <returns>the environment type</returns>
         public static EnvironmentType GetEnvironmentType(string environment)
         {
-            if (string.IsNullOrEmpty(environment)) return EnvironmentType.UNKNOWN;
+            if (environment.IsNullOrEmpty()) return EnvironmentType.UNKNOWN;
 
             environment = environment.Trim().ToLower();
 
             Dictionary<string, string> props = GetEnvironmentProperties(environment);
 
             // no valid property found
-            if(props.Count == 0)
+            if (props.Count == 0)
             {
                 return EnvironmentType.UNKNOWN;
             }
 
             // web environment only contains the browser key
-            if (props.ContainsKey(BrowserKey.ToLower()) && props.Count == 1)
+            if (props.ContainsKey(BrowserKey) && props.Count == 1)
             {
                 return EnvironmentType.WEB;
             }
 
             // check if it's a mobile environment
-            foreach(var prop in props)
+            foreach (var prop in props)
             {
-                if(!IsKnownMobileProperty(prop.Key))
+                if (!IsKnownMobileProperty(prop.Key))
                 {
                     return EnvironmentType.UNKNOWN;
                 }
@@ -333,21 +336,13 @@ namespace HpToolsLauncher.ParallelRunner
 
                 if (type == EnvironmentType.MOBILE)
                 {
-                    environment.mobile = ParseMobileEnvironment(env);
-
-                    if(environment.mobile == null)
-                    {
-                        throw new ParallelRunnerConfigurationException("Invalid mobile configuration provided: " + env);
-                    }
+                    environment.mobile = ParseMobileEnvironment(env) ?? 
+                        throw new ParallelRunnerConfigurationException($"Invalid mobile configuration provided: {env}");
                 }
-                else if(type == EnvironmentType.WEB)
+                else if (type == EnvironmentType.WEB)
                 {
-                    environment.web = ParseWebEnvironment(env);
-
-                    if(environment.web == null)
-                    {
-                        throw new ParallelRunnerConfigurationException("Invalid web configuration provided: " + env);
-                    }
+                    environment.web = ParseWebEnvironment(env) ??
+                        throw new ParallelRunnerConfigurationException($"Invalid web configuration provided: {env}");
                 }
                 else
                 {
@@ -355,7 +350,7 @@ namespace HpToolsLauncher.ParallelRunner
                     continue;
                 }
 
-                var item = new ParallelTestRunConfigurationItem
+                ParallelTestRunConfigurationItem item = new()
                 {
                     test = testInfo.TestPath,
                     env = environment,
@@ -365,7 +360,7 @@ namespace HpToolsLauncher.ParallelRunner
                 items.Add(item);
             }
 
-            parallelTestRunConfiguration.parallelRuns = items.ToArray();
+            parallelTestRunConfiguration.parallelRuns = [.. items];
 
             return parallelTestRunConfiguration;
         }
@@ -377,28 +372,26 @@ namespace HpToolsLauncher.ParallelRunner
         /// <returns></returns>
         public static ProxySettings GetMCProxySettings(McConnectionInfo mcConnectionInfo)
         {
-            if (String.IsNullOrEmpty(mcConnectionInfo.ProxyAddress))
+            if (mcConnectionInfo.ProxyAddress.IsNullOrEmpty())
                 return null;
 
             AuthenticationSettings authenticationSettings = null;
 
-            if (!string.IsNullOrEmpty(mcConnectionInfo.ProxyUserName)
-                && !string.IsNullOrEmpty(mcConnectionInfo.ProxyPassword))
+            if (!mcConnectionInfo.ProxyUserName.IsNullOrEmpty() && !mcConnectionInfo.ProxyPassword.IsNullOrEmpty())
             {
-                authenticationSettings = new AuthenticationSettings
+                authenticationSettings = new()
                 {
                     username = mcConnectionInfo.ProxyUserName,
-                    password = WinUserNativeMethods.
-                        ProtectBSTRToBase64(mcConnectionInfo.ProxyPassword)
+                    password = WinUserNativeMethods.ProtectBSTRToBase64(mcConnectionInfo.ProxyPassword)
                 };
             }
 
-            ProxySettings proxySettings = new ProxySettings
+            ProxySettings proxySettings = new()
             {
                 authentication = authenticationSettings,
                 hostname = mcConnectionInfo.ProxyAddress,
                 port = mcConnectionInfo.ProxyPort,
-                type = mcConnectionInfo.ProxyType == 1 ? "system" : "http",
+                type = mcConnectionInfo.ProxyType == 1 ? SYSTEM : HTTP,
             };
 
             return proxySettings;
@@ -411,6 +404,9 @@ namespace HpToolsLauncher.ParallelRunner
         /// <returns> the parallel runner uft settings </returns>
         public static UFTSettings ParseMCSettings(McConnectionInfo info)
         {
+            if (info == null)
+                return null;
+
             if (info.HostAddress.IsNullOrEmpty() ||
                 (info.UserName.IsNullOrEmpty() && info.ClientId.IsNullOrEmpty()) ||
                 (info.Password.IsNullOrEmpty() && info.SecretKey.IsNullOrEmpty()) ||
@@ -422,7 +418,7 @@ namespace HpToolsLauncher.ParallelRunner
                 authType = (int)info.MobileAuthType,
                 hostname = info.HostAddress,
                 port = Convert.ToInt32(info.HostPort),
-                protocol = info.UseSSL ? "https" : "http"
+                protocol = info.UseSSL ? HTTPS : HTTP
             };
             if (info.MobileAuthType == McConnectionInfo.AuthType.UsernamePassword)
             {
@@ -443,12 +439,12 @@ namespace HpToolsLauncher.ParallelRunner
             var proxy = GetMCProxySettings(info);
 
             // set the proxy information if we have it
-            if(proxy != null)
+            if (proxy != null)
             {
                 mcSettings.proxy = proxy;
             }
 
-            UFTSettings uftSettings = new UFTSettings
+            UFTSettings uftSettings = new()
             {
                 mc = mcSettings
             };
@@ -463,7 +459,7 @@ namespace HpToolsLauncher.ParallelRunner
         /// <returns>
         /// the path of the newly generated config file 
         /// </returns>
-        public static string GetConfigFilePath(TestInfo testInfo, McConnectionInfo mcConnectionInfo,Dictionary<string, List<string>> environments)
+        public static string GetConfigFilePath(TestInfo testInfo, McConnectionInfo mcConnectionInfo, Dictionary<string, List<string>> environments)
         {
             // no environment defined for this test
             if (!environments.ContainsKey(testInfo.TestId))
@@ -488,21 +484,20 @@ namespace HpToolsLauncher.ParallelRunner
                 config.settings = mcSettings;
             }
 
-            var configFilePath = Path.Combine(testInfo.TestPath, testInfo.TestId + ".json");
+            var configFilePath = Path.Combine(testInfo.TestPath, $"{testInfo.TestId}.json");
 
-            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            JavaScriptSerializer serializer = new();
 
-            string configJson = null;
-
+            string configJson;
             try
             {
                 configJson = serializer.Serialize(config);
             }
-            catch(InvalidOperationException e)
+            catch (InvalidOperationException e)
             {
-                throw new ParallelRunnerConfigurationException("Invalid json confguration provided: ",e);
+                throw new ParallelRunnerConfigurationException("Invalid json confguration provided: ", e);
             }
-            catch(ArgumentException e)
+            catch (ArgumentException e)
             {
                 throw new ParallelRunnerConfigurationException("Configuration serialization recursion limit exceeded: ", e);
             }

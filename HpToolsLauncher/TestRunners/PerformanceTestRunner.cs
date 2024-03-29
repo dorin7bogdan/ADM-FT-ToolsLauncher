@@ -185,7 +185,7 @@ namespace HpToolsLauncher.TestRunners
             ConsoleWriter.WriteLine(runDesc.TestPath);
             runDesc.TestState = TestState.Unknown;
 
-            if (!Helper.isLoadRunnerInstalled())
+            if (!Helper.IsLoadRunnerInstalled())
             {
                 runDesc.TestState = TestState.Error;
                 runDesc.ErrorDesc = string.Format(Resources.LoadRunnerNotInstalled, System.Environment.MachineName);

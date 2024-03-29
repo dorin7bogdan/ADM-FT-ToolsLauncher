@@ -30,6 +30,7 @@
  * ___________________________________________________________________
  */
 
+using HpToolsLauncher.Utils;
 using System.Diagnostics;
 
 namespace HpToolsLauncher
@@ -51,15 +52,13 @@ namespace HpToolsLauncher
         void Close();
     }
 
-    public class ProcessAdapter : IProcessAdapter
+    public class ProcessAdapter(Process process) : IProcessAdapter
     {
-        private Process Process { get; set; }
-
         public int ExitCode
         {
             get
             {
-                return Process.ExitCode;
+                return process.ExitCode;
             }
         }
 
@@ -67,32 +66,30 @@ namespace HpToolsLauncher
         {
             get
             {
-                return Process.HasExited;
+                return process.HasExited;
             }
         }
 
-        public ProcessAdapter(Process process)  { Process = process; }
-
         public void Start()
         {
-            Process.ErrorDataReceived += Proc_ErrDataReceived;
+            process.ErrorDataReceived += Proc_ErrDataReceived;
 
-            Process.Start();
+            process.Start();
 
-            if (Process.StartInfo.RedirectStandardOutput)
+            if (process.StartInfo.RedirectStandardOutput)
             {
-                Process.BeginOutputReadLine();
+                process.BeginOutputReadLine();
             }
 
-            if (Process.StartInfo.RedirectStandardError)
+            if (process.StartInfo.RedirectStandardError)
             {
-                Process.BeginErrorReadLine();
+                process.BeginErrorReadLine();
             }
         }
 
         private void Proc_ErrDataReceived(object sender, DataReceivedEventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(e.Data))
+            if (!e.Data.IsNullOrWhiteSpace())
             {
                 ConsoleWriter.ErrorSummaryLines.Add(e.Data);
             }
@@ -100,34 +97,32 @@ namespace HpToolsLauncher
 
         public void WaitForExit()
         {
-            Process.WaitForExit();
+            process.WaitForExit();
         }
 
         public bool WaitForExit(int milliseconds)
         {
-            return Process.WaitForExit(milliseconds);
+            return process.WaitForExit(milliseconds);
         }
 
         public void Kill()
         {
-            Process.Kill();
+            process.Kill();
         }
 
         public void Close()
         {
-            Process.Close();
+            process.Close();
         }
     }
 
-    public class ElevatedProcessAdapter : IProcessAdapter
+    public class ElevatedProcessAdapter(ElevatedProcess elevatedProcess) : IProcessAdapter
     {
-        private ElevatedProcess ElevatedProcess { get; set; }
-
         public int ExitCode
         {
             get
             {
-                return ElevatedProcess.ExitCode;
+                return elevatedProcess.ExitCode;
             }
         }
 
@@ -135,35 +130,33 @@ namespace HpToolsLauncher
         {
             get
             {
-                return ElevatedProcess.HasExited;
+                return elevatedProcess.HasExited;
             }
         }
 
-        public ElevatedProcessAdapter(ElevatedProcess elevatedProcess)  { this.ElevatedProcess = elevatedProcess; }
-
         public void Start()
         {
-            ElevatedProcess.StartElevated();
+            elevatedProcess.StartElevated();
         }
 
         public void WaitForExit()
         {
-            ElevatedProcess.WaitForExit();
+            elevatedProcess.WaitForExit();
         }
 
         public bool WaitForExit(int milliseconds)
         {
-            return ElevatedProcess.WaitForExit(milliseconds);
+            return elevatedProcess.WaitForExit(milliseconds);
         }
 
         public void Kill()
         {
-            ElevatedProcess.Kill();
+            elevatedProcess.Kill();
         }
 
         public void Close()
         {
-            ElevatedProcess.Close();
+            elevatedProcess.Close();
         }
     }
 

@@ -88,7 +88,6 @@ namespace HpToolsLauncher
         private const string RECORDING = "Recording";
         private const string PAUSED = "Paused";
         private const string REPORT = "Report";
-        private const string UFT = "UFT";
         private const string TEST_FAILED = "Test failed";
         private const string DDMMYYYYHHmmssfff = "ddMMyyyyHHmmssfff";
         private const string QT_APP = "Quicktest.Application";
@@ -188,8 +187,7 @@ namespace HpToolsLauncher
                                 // it means the UFT is launched but not shown the main window yet
                                 // in which case it shall be considered as UFT is not used at all
                                 // so here can kill the UFT process to continue
-                                Process[] procs = Process.GetProcessesByName(UFT);
-                                procs?.ForEach(p => p.Kill());
+                                Helper.KillUftProcess();
                                 uftProcessExist = false;
                             }
                             break;

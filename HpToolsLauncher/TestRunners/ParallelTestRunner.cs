@@ -32,6 +32,7 @@
 
 using HpToolsLauncher.Common;
 using HpToolsLauncher.ParallelRunner;
+using HpToolsLauncher.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -46,21 +47,29 @@ namespace HpToolsLauncher.TestRunners
     /// The ParallelTestRunner class
     /// Contains all methods for running a file system test using parallel runner.
     /// </summary>
-    class ParallelTestRunner : IFileSysTestRunner
+    public class ParallelTestRunner : IFileSysTestRunner
     {
+        private const string QT_APP = "Quicktest.Application";
+        private const string PER_PROCESS_MUTEX_UFT = "per_process_mutex_UFT";
+        private const string NOT_LAUNCHED = "Not launched";
+        private const string READY = "Ready";
+        private const string WAITING = "Waiting";
+        private const string BUSY = "Busy";
+        private const string RUNNING = "Running";
+        private const string RECORDING = "Recording";
+        private const string PAUSED = "Paused";
+        private const string EXPLORER = "explorer";
+
         // each test has a list of environments that it will run on
         private readonly Dictionary<string, List<string>> _environments;
         private readonly IAssetRunner _runner;
         private TimeSpan _timeout;
         private readonly McConnectionInfo _mcConnectionInfo;
-        private const string ParallelRunnerExecutable = "ParallelRunner.exe";
         private string _parallelRunnerPath;
         private RunCancelledDelegate _runCancelled;
-        private const int PollingTimeMs = 500;
+        private const int POLLING_TIME_MS = 500;
         private readonly bool _canRun = false;
-        private const string ParallelRunnerArguments = "-o static -c \"{0}\"";
-
-        private List<string> _configFiles = [];
+        private const string PARALLEL_RUNNER_ARGS = "-o static -c \"{0}\"";
 
         public ParallelTestRunner(IAssetRunner runner, TimeSpan timeout, McConnectionInfo mcConnectionInfo, Dictionary<string, List<string>> environments)
         {
@@ -79,7 +88,7 @@ namespace HpToolsLauncher.TestRunners
         /// </returns>
         private bool TrySetupParallelRunner()
         {
-            _parallelRunnerPath = Helper.GetParallelRunnerDirectory(ParallelRunnerExecutable);
+            _parallelRunnerPath = Helper.GetParallelRunnerDirectory();
 
             ConsoleWriter.WriteLine("Attempting to start parallel runner from: " + _parallelRunnerPath);
 
@@ -173,7 +182,7 @@ namespace HpToolsLauncher.TestRunners
             // when we run the same test multiple times on the same build
             string resFolder = Helper.GetNextResFolder(testInfo.ReportPath, "Res");
 
-            var runResults = new TestRunResults
+            TestRunResults runResults = new()
             {
                 ReportLocation = testInfo.ReportPath,
                 ErrorDesc = errorReason,
@@ -199,7 +208,7 @@ namespace HpToolsLauncher.TestRunners
 
             // try to check if the UFT process already exists
             bool uftProcessExist = false;
-            using (Mutex m = new(true, "per_process_mutex_UFT", out bool isNewInstance))
+            using (Mutex m = new(true, PER_PROCESS_MUTEX_UFT, out bool isNewInstance))
             {
                 if (!isNewInstance)
                 {
@@ -210,35 +219,34 @@ namespace HpToolsLauncher.TestRunners
             // try to get qtp status via qtp automation object since the uft process exists
             if (uftProcessExist)
             {
-                var type = Type.GetTypeFromProgID("Quicktest.Application");
+                var type = Type.GetTypeFromProgID(QT_APP);
                 var qtpApplication = Activator.CreateInstance(type) as QTObjectModelLib.Application;
-                bool needKillUFTProcess = false;
                 // status: Not launched / Ready / Busy / Running / Recording / Waiting / Paused
                 string status = qtpApplication.GetStatus();
                 switch (status)
                 {
-                    case "Not launched":
+                    case NOT_LAUNCHED:
                         if (uftProcessExist)
                         {
                             // UFT process exist but the status retrieved from qtp automation object is Not launched
                             // it means the UFT is launched but not shown the main window yet
                             // in which case it shall be considered as UFT is not used at all
                             // so here can kill the UFT process to continue
-                            needKillUFTProcess = true;
+                            Helper.KillUftProcess();
                         }
                         break;
 
-                    case "Ready":
-                    case "Waiting":
+                    case READY:
+                    case WAITING:
                         // UFT is launched but not running or recording, shall be considered as UFT is not used
                         // so here can kill the UFT process to continue
-                        needKillUFTProcess = true;
+                        Helper.KillUftProcess();
                         break;
 
-                    case "Busy":
-                    case "Running":
-                    case "Recording":
-                    case "Paused":
+                    case BUSY:
+                    case RUNNING:
+                    case RECORDING:
+                    case PAUSED:
                         // UFT is launched and somehow in use now, shouldn't kill UFT process
                         // here make the test fail
                         errorReason = Resources.UFT_Running;
@@ -250,25 +258,14 @@ namespace HpToolsLauncher.TestRunners
                         // by default, let the tool run test, the behavior might be unexpected
                         break;
                 }
-
-                if (needKillUFTProcess)
-                {
-                    Process[] procs = Process.GetProcessesByName("uft");
-                    if (procs != null)
-                    {
-                        foreach (Process proc in procs)
-                        {
-                            proc.Kill();
-                        }
-                    }
-                }
             }
 
             // Try to create the ParalleReport path
             try
             {
                 Directory.CreateDirectory(runResults.ReportLocation);
-            }catch(Exception)
+            }
+            catch (Exception)
             {
                 errorReason = string.Format(Resources.FailedToCreateTempDirError, runResults.ReportLocation);
                 runResults.TestState = TestState.Error;
@@ -279,18 +276,17 @@ namespace HpToolsLauncher.TestRunners
             }
 
             runResults.StartDateTime = DateTime.Now;
-            ConsoleWriter.WriteLine(DateTime.Now.ToString(Launcher.DateFormat) + " => Using ParallelRunner to execute test: " + testInfo.TestPath);
+            ConsoleWriter.WriteLine($"{DateTime.Now.ToString(Launcher.DateFormat)} => Using ParallelRunner to execute test: {testInfo.TestPath}");
 
             _runCancelled = runCancelled;
 
             // prepare the json file for the process
-            var configFilePath = string.Empty;
-
+            string configFilePath;
             try
             {
-                configFilePath =  ParallelRunnerEnvironmentUtil.GetConfigFilePath(testInfo,_mcConnectionInfo,_environments);
-                _configFiles.Add(configFilePath);
-            }catch(ParallelRunnerConfigurationException ex) // invalid configuration
+                configFilePath = ParallelRunnerEnvironmentUtil.GetConfigFilePath(testInfo, _mcConnectionInfo, _environments);
+            }
+            catch (ParallelRunnerConfigurationException ex) // invalid configuration
             {
                 errorReason = ex.Message;
                 runResults.ErrorDesc = errorReason;
@@ -300,14 +296,14 @@ namespace HpToolsLauncher.TestRunners
 
             // Parallel runner argument "-c" for config path and "-o static" so that
             // the output from ParallelRunner is compatible with Jenkins
-            var arguments = string.Format(ParallelRunnerArguments, configFilePath);
+            var arguments = string.Format(PARALLEL_RUNNER_ARGS, configFilePath);
 
             // the test can be started now
             runResults.TestState = TestState.Running;
 
-            var runTime = new Stopwatch();
+            Stopwatch runTime = new();
             runTime.Start();
-            
+
             string failureReason = null;
             runResults.ErrorDesc = null;
 
@@ -329,17 +325,6 @@ namespace HpToolsLauncher.TestRunners
 
         public void CleanUp()
         {
-            // we need to remove the json config files as they are no longer needed
-            foreach(var configFile in _configFiles)
-            {
-                try
-                {
-                    File.Delete(configFile);
-                }
-                catch (Exception) {
-                    ConsoleWriter.WriteErrLine("Unable to remove configuration file: " + configFile);
-                }
-            }
         }
 
         #region Process
@@ -354,10 +339,10 @@ namespace HpToolsLauncher.TestRunners
             Process parentProcess = currentProcess.Parent();
 
             // if they are not in the same session we will assume it is a service
-            Process explorer = null;
+            Process explorer;
             try
             {
-                explorer = Process.GetProcessesByName("explorer").FirstOrDefault();
+                explorer = Process.GetProcessesByName(EXPLORER).FirstOrDefault();
             }
             catch (InvalidOperationException)
             {
@@ -365,7 +350,7 @@ namespace HpToolsLauncher.TestRunners
             }
 
             // could not retrieve the explorer process
-            if(explorer == null)
+            if (explorer == null)
             {
                 // try to start the process from the current session
                 return false;
@@ -380,26 +365,24 @@ namespace HpToolsLauncher.TestRunners
         /// <param name="fileName">the filename to be ran</param>
         /// <param name="arguments">the arguments for the process</param>
         /// <returns>the corresponding process type, based on the jenkins instance</returns>
-        private object GetProcessTypeForCurrentSession(string fileName,string arguments)
+        private object GetProcessTypeForCurrentSession(string fileName, string arguments)
         {
             try
             {
                 if (!IsParentProcessRunningInUserSession())
                 {
                     Process process = new();
-
                     InitProcess(process, fileName, arguments);
-
                     return process;
                 }
 
                 ConsoleWriter.WriteLine("Starting ParallelRunner from service session!");
 
                 // the process must be started in the user session
-                ElevatedProcess elevatedProcess = new ElevatedProcess(fileName, arguments, Helper.GetSTInstallPath());
+                ElevatedProcess elevatedProcess = new(fileName, arguments, Helper.GetSTInstallPath());
                 return elevatedProcess;
             }
-            catch (Exception)
+            catch
             {
                 return null;
             }
@@ -421,6 +404,8 @@ namespace HpToolsLauncher.TestRunners
                 failureReason = "Could not create ProcessAdapter instance!";
                 return (int)ParallelRunResult.Error;
             }
+
+            ConsoleWriter.WriteLine($"{fileName} {arguments}");
 
             try
             {
@@ -444,10 +429,7 @@ namespace HpToolsLauncher.TestRunners
             }
             finally
             {
-                if (processAdapter != null)
-                {
-                    processAdapter.Close();
-                }
+                processAdapter?.Close();
             }
         }
 
@@ -478,7 +460,7 @@ namespace HpToolsLauncher.TestRunners
 
         private void OnProcessOutputDataReceived(object sender, DataReceivedEventArgs e)
         {
-            if (!string.IsNullOrEmpty(e.Data))
+            if (!e.Data.IsNullOrEmpty())
             {
                 ConsoleWriter.WriteLine(e.Data);
             }
@@ -486,7 +468,7 @@ namespace HpToolsLauncher.TestRunners
 
         private void OnProcessErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
-            if (!string.IsNullOrEmpty(e.Data))
+            if (!e.Data.IsNullOrEmpty())
             {
                 ConsoleWriter.WriteRawErrLine(e.Data);
             }
@@ -503,11 +485,11 @@ namespace HpToolsLauncher.TestRunners
 
             proc.Start();
 
-            proc.WaitForExit(PollingTimeMs);
+            proc.WaitForExit(POLLING_TIME_MS);
 
             while (!_runCancelled() && !proc.HasExited)
             {
-                proc.WaitForExit(PollingTimeMs);
+                proc.WaitForExit(POLLING_TIME_MS);
             }
 
             ConsoleWriter.WriteLine("-------------------------------------------------------------------------------------------------------");
