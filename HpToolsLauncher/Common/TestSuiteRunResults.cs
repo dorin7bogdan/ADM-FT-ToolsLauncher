@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Certain versions of software accessible here may contain branding from Hewlett-Packard Company (now HP Inc.) and Hewlett Packard Enterprise Company.
  * This software was acquired by Micro Focus on September 1, 2017, and is now offered by OpenText.
  * Any reference to the HP and Hewlett Packard Enterprise/HPE marks is historical in nature, and the HP and Hewlett Packard Enterprise/HPE marks are the property of their respective owners.
@@ -30,24 +30,66 @@
  * ___________________________________________________________________
  */
 
-namespace HpToolsLauncher
+using System;
+using System.Collections.Generic;
+
+namespace HpToolsLauncher.Common
 {
-    public class TestData
+    public class TestSuiteRunResults
     {
-        public TestData(string tests,string id)
+        private List<TestRunResults> m_testRuns = [];
+        private int m_numSkipped = 0;
+        private int m_numErrors = 0;
+        private int m_numFailures = 0;
+        private int m_numTests = 0;
+        private TimeSpan m_totalRunTime = TimeSpan.Zero;
+
+        public string SuiteName { get; set; }
+
+        public int NumFailures
         {
-            this.Tests = tests;
-            this.Id = id;
+            get { return m_numFailures; }
+            set { m_numFailures = value; }
         }
 
-        public string Tests{get;set;}
-        public string Id { get; set; }
-        public string ReportPath { get; set; }
-
-        public override string ToString()
+        public int NumTests
         {
-            return Id + ": " + Tests;
+            get { return m_numTests; }
+            set { m_numTests = value; }
         }
 
+        public TimeSpan TotalRunTime
+        {
+            get { return m_totalRunTime; }
+            set { m_totalRunTime = value; }
+        }
+
+        public List<TestRunResults> TestRuns
+        {
+            get { return m_testRuns; }
+            set { m_testRuns = value; }
+        }
+
+        public int NumErrors
+        {
+            get { return m_numErrors; }
+            set { m_numErrors = value; }
+        }
+
+        public int NumSkipped
+        {
+            get { return m_numSkipped; }
+            set { m_numSkipped = value; }
+        }
+
+        internal void AppendResults(TestSuiteRunResults desc)
+        {
+            this.TestRuns.AddRange(desc.TestRuns);
+            this.TotalRunTime += desc.TotalRunTime;
+            this.NumErrors += desc.NumErrors;
+            this.NumFailures += desc.NumFailures;
+            this.NumTests += desc.NumTests;
+            this.NumSkipped += desc.NumSkipped;
+        }
     }
 }

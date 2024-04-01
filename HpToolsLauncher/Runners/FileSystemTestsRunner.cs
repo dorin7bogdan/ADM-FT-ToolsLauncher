@@ -39,7 +39,7 @@ using HpToolsLauncher.Properties;
 using HpToolsLauncher.TestRunners;
 using HpToolsLauncher.RTS;
 using HpToolsLauncher.Common;
-using HpToolsLauncher.Utils;
+using HpToolsLauncher.Interfaces;
 
 namespace HpToolsLauncher
 {
@@ -49,7 +49,6 @@ namespace HpToolsLauncher
 
         Dictionary<string, string> _jenkinsEnvVariables;
         private List<TestInfo> _tests;
-        private static string _uftViewerPath;
         private int _errors, _fails, _skipped;
         private bool _displayController;
         private string _analysisTemplate;
@@ -171,14 +170,14 @@ namespace HpToolsLauncher
                     else //file might be LoadRunner scenario or mtb file (which contain links to tests) other files are dropped
                     {
                         FileInfo fi = new(source.Tests);
-                        if (fi.Extension == Helper.LoadRunnerFileExtension)
+                        if (fi.Extension == Helper._LRS)
                         {
                             testGroup.Add(new(source.Tests, source.Tests, source.Tests, source.Id)
                             {
                                 ReportPath = source.ReportPath
                             });
                         }
-                        else if (fi.Extension == Helper.MtbFileExtension)
+                        else if (fi.Extension == Helper._MTB)
                         {
                             MtbManager manager = new();
                             var paths = manager.Parse(source.Tests);
@@ -187,7 +186,7 @@ namespace HpToolsLauncher
                                 testGroup.Add(new(p, p, source.Tests, source.Id));
                             }
                         }
-                        else if (fi.Extension == Helper.MtbxFileExtension)
+                        else if (fi.Extension == Helper._MTBX)
                         {
                             testGroup = MtbxManager.Parse(source.Tests, _jenkinsEnvVariables, source.Tests);
 
@@ -331,7 +330,7 @@ namespace HpToolsLauncher
                     }
                     catch (Exception ex)
                     {
-                        runResult = new TestRunResults
+                        runResult = new()
                         {
                             TestState = TestState.Error,
                             ErrorDesc = ex.Message,
@@ -354,7 +353,7 @@ namespace HpToolsLauncher
                         }
                         else
                         {
-                            if (string.IsNullOrEmpty(runResult.ErrorDesc))
+                            if (runResult.ErrorDesc.IsNullOrEmpty())
                             {
                                 runResult.ErrorDesc = RunCancelled() ? Resources.ExceptionUserCancelled : Resources.ExceptionExternalProcess;
                             }
@@ -542,16 +541,6 @@ namespace HpToolsLauncher
                     _fails += 1;
                     break;
             }
-        }
-
-
-        /// <summary>
-        /// Opens the report viewer for the given report directory
-        /// </summary>
-        /// <param name="reportDirectory"></param>
-        public static void OpenReport(string reportDirectory)
-        {
-            Helper.OpenReport(reportDirectory, ref _uftViewerPath);
         }
     }
 }

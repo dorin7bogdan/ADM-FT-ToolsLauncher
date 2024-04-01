@@ -33,6 +33,8 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using HpToolsLauncher.Common;
+using HpToolsLauncher.Interfaces;
 using HpToolsLauncher.Properties;
 
 namespace HpToolsLauncher

@@ -37,7 +37,7 @@ using System.Linq;
 using System.ComponentModel;
 using System.Collections.Generic;
 
-namespace HpToolsLauncher.Utils
+namespace HpToolsLauncher.Common
 {
     internal static class Extensions
     {

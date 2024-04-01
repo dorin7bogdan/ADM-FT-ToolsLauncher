@@ -33,7 +33,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace HpToolsLauncher.Utils
+namespace HpToolsLauncher.Common
 {
     public static class WinUserNativeMethods
     {

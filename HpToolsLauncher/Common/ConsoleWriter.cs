@@ -34,7 +34,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
-namespace HpToolsLauncher
+namespace HpToolsLauncher.Common
 {
     public static class ConsoleWriter
     {

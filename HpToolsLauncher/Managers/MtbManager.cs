@@ -34,6 +34,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using HpToolsLauncher.Common;
 using HpToolsLauncher.Properties;
 //using UFT.Runner.Properties;
 

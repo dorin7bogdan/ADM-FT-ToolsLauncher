@@ -30,8 +30,9 @@
  * ___________________________________________________________________
  */
 
-using System;
-namespace HpToolsLauncher
+using HpToolsLauncher.Common;
+
+namespace HpToolsLauncher.Interfaces
 {
     public delegate bool RunCancelledDelegate();
     public interface IFileSysTestRunner

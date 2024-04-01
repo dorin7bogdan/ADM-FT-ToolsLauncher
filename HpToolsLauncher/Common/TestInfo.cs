@@ -39,7 +39,7 @@ using System.Text;
 using System.Xml.Linq;
 using System.Xml.Schema;
 
-namespace HpToolsLauncher
+namespace HpToolsLauncher.Common
 {
     public class TestInfo
     {

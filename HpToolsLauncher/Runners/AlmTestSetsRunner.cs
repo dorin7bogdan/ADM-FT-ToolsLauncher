@@ -40,6 +40,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using HpToolsLauncher.Common;
 using HpToolsLauncher.Properties;
 using Mercury.TD.Client.Ota.QC9;
 
@@ -58,8 +59,8 @@ namespace HpToolsLauncher
         private const char BACKSLAH = '\\';
         private const string FAILED = "Failed";
         private const string COMMA = ",";
-        private readonly char[] BACKSLASH_CHAR_ARR = new char[] { BACKSLAH };
-        private readonly char[] COMMA_CHAR_ARR = new char[] { ',' };
+        private readonly char[] BACKSLASH_CHAR_ARR = [BACKSLAH];
+        private readonly char[] COMMA_CHAR_ARR = [','];
 
         public ITDConnection13 TdConnection
         {

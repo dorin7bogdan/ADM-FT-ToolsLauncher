@@ -40,6 +40,8 @@ using HP.LoadRunner.Interop.Wlrun;
 using HpToolsLauncher.Properties;
 using System.Xml;
 using HpToolsLauncher.RTS;
+using HpToolsLauncher.Common;
+using HpToolsLauncher.Interfaces;
 
 namespace HpToolsLauncher.TestRunners
 {
@@ -185,7 +187,7 @@ namespace HpToolsLauncher.TestRunners
             ConsoleWriter.WriteLine(runDesc.TestPath);
             runDesc.TestState = TestState.Unknown;
 
-            if (!Helper.isLoadRunnerInstalled())
+            if (!Helper.IsLoadRunnerInstalled())
             {
                 runDesc.TestState = TestState.Error;
                 runDesc.ErrorDesc = string.Format(Resources.LoadRunnerNotInstalled, System.Environment.MachineName);

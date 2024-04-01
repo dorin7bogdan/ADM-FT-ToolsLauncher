@@ -34,7 +34,7 @@ using System;
 using System.Text;
 using HP.LoadRunner.Interop.Wlrun;
 
-namespace HpToolsLauncher.TestRunners
+namespace HpToolsLauncher.Common
 {
     public class SummaryDataLogger
     {

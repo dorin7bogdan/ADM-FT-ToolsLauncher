@@ -35,14 +35,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using HpToolsLauncher.Properties;
-using HpToolsLauncher.TestRunners;
+using HpToolsLauncher.Common;
 using HpToolsLauncher.RTS;
 using System.Xml.Serialization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Globalization;
-using HpToolsLauncher.Utils;
-using HpToolsLauncher.Common;
+using HpToolsLauncher.Interfaces;
 
 namespace HpToolsLauncher
 {

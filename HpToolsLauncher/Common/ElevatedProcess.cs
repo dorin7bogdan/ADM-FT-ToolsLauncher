@@ -35,7 +35,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace HpToolsLauncher
+namespace HpToolsLauncher.Common
 {
     [Serializable]
     public class ElevatedProcessException : Exception

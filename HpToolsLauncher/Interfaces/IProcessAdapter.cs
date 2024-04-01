@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Certain versions of software accessible here may contain branding from Hewlett-Packard Company (now HP Inc.) and Hewlett Packard Enterprise Company.
  * This software was acquired by Micro Focus on September 1, 2017, and is now offered by OpenText.
  * Any reference to the HP and Hewlett Packard Enterprise/HPE marks is historical in nature, and the HP and Hewlett Packard Enterprise/HPE marks are the property of their respective owners.
@@ -31,25 +31,24 @@
  */
 
 using HpToolsLauncher.Common;
-using System.Globalization;
+using System.Diagnostics;
 
 namespace HpToolsLauncher.Interfaces
 {
-    public interface IXmlBuilder
+    public interface IProcessAdapter
     {
-        string XmlName { get; set; }
-        CultureInfo Culture { get; set; }
-        bool TestNameOnly { get; set; }
-        bool UnifiedTestClassname { get; set; }
-        bool CreateXmlFromRunResults(TestSuiteRunResults results, out string error);
-        testsuites TestSuites { get; }
-        /// <summary>
-        /// Create or update the xml report. This function can be called in a loop after each test execution in order to get the report built progressively
-        /// If the job is aborted by user we still can provide the (partial) report with completed tests results.
-        /// </summary>
-        /// <param name="ts">reference to testsuite object, existing or going to be added to _testSuites collection</param>
-        /// <param name="testRes">test run results to be converted</param>
-        /// <param name="addToTestSuites">flag to indicate if the first param testsuite must be added to the collection</param>
-        void CreateOrUpdatePartialXmlReport(testsuite ts, TestRunResults testRes, bool addToTestSuites);
+        int ExitCode { get; }
+
+        bool HasExited { get; }
+
+        void Start();
+
+        void WaitForExit();
+
+        bool WaitForExit(int milliseconds);
+
+        void Kill();
+
+        void Close();
     }
 }

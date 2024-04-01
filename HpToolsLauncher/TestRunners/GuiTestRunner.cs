@@ -41,11 +41,8 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using HpToolsLauncher.TestRunners;
 using HpToolsLauncher.Common;
-using HpToolsLauncher.Utils;
 using static HpToolsLauncher.Common.McConnectionInfo;
-using System.Globalization;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Diagnostics.Eventing.Reader;
+using HpToolsLauncher.Interfaces;
 
 namespace HpToolsLauncher
 {
@@ -88,7 +85,6 @@ namespace HpToolsLauncher
         private const string RECORDING = "Recording";
         private const string PAUSED = "Paused";
         private const string REPORT = "Report";
-        private const string UFT = "UFT";
         private const string TEST_FAILED = "Test failed";
         private const string DDMMYYYYHHmmssfff = "ddMMyyyyHHmmssfff";
         private const string QT_APP = "Quicktest.Application";
@@ -96,6 +92,11 @@ namespace HpToolsLauncher
         private const string QTPAUTOMATIONAGENT = "qtpAutomationAgent";
         private const string QT_RUNRESOPTS = "QuickTest.RunResultsOptions";
         private const string WEBLAUNCHER_NOT_FOUND = "WebLauncher not found. Please make sure the Web Addin is selected at Test level.";
+        private const string ILLEGAL_INPUT_PARAM_TYPE_FORMAT = "Illegal input parameter type (skipped). param: '{0}'. expected type: '{1}'. actual type: '{2}'";
+        private const string ILLEGAL_ITERATION_MODE_FORMAT = "Illegal iteration mode '{0}'. Available modes are : {1}";
+        private const string BACKSLASH = "\\";
+        private const string COMMA_SPACE = ", ";
+        private const string _ARGUMENTS_ = "<Arguments/>";
 
         private readonly IAssetRunner _runNotifier = runNotifier;
         private readonly object _lockObject = new();
@@ -188,8 +189,7 @@ namespace HpToolsLauncher
                                 // it means the UFT is launched but not shown the main window yet
                                 // in which case it shall be considered as UFT is not used at all
                                 // so here can kill the UFT process to continue
-                                Process[] procs = Process.GetProcessesByName(UFT);
-                                procs?.ForEach(p => p.Kill());
+                                Helper.KillUftProcess();
                                 uftProcessExist = false;
                             }
                             break;
@@ -374,7 +374,7 @@ namespace HpToolsLauncher
                 runDesc.ReportLocation = Path.GetFullPath(testinf.ReportPath);
                 ConsoleWriter.WriteLine($"{DateTime.Now.ToString(Launcher.DateFormat)} Report path is explicitly set as: {runDesc.ReportLocation}");
             }
-            else if (!testinf.ReportBaseDirectory.IsNullOrEmpty())
+            else if (!testinf.ReportBaseDirectory.IsNullOrWhiteSpace())
             {
                 testinf.ReportBaseDirectory = Path.GetFullPath(testinf.ReportBaseDirectory);
                 if (!Helper.TrySetTestReportPath(runDesc, testinf, ref errorReason))
@@ -418,7 +418,7 @@ namespace HpToolsLauncher
 
             if (Directory.Exists(rptLocation))
             {
-                int lastIndex = rptLocation.IndexOf("\\");
+                int lastIndex = rptLocation.IndexOf(BACKSLASH);
                 var location = rptLocation.Substring(0, lastIndex);
                 var name = rptLocation.Substring(lastIndex + 1);
                 rptLocation = Helper.GetNextResFolder(location, name);
@@ -737,7 +737,6 @@ namespace HpToolsLauncher
             }
             catch (Exception e2)
             {
-
                 ConsoleWriter.WriteLine(string.Format(Resources.GeneralErrorWithStack, e2.Message, e2.StackTrace));
                 testResults.TestState = TestState.Error;
                 testResults.ErrorDesc = Resources.QtpRunError;
@@ -745,7 +744,6 @@ namespace HpToolsLauncher
                 result.IsSuccess = false;
                 return result;
             }
-
 
             return result;
         }
@@ -781,7 +779,7 @@ namespace HpToolsLauncher
             try
             {
                 XmlDocument outputArguments = new() { PreserveWhitespace = true };
-                outputArguments.LoadXml("<Arguments/>");
+                outputArguments.LoadXml(_ARGUMENTS_);
 
                 for (int i = 1; i <= _qtpParamDefs.Count; ++i)
                 {
@@ -899,7 +897,7 @@ namespace HpToolsLauncher
                             object paramValue = inputParams[paramName];
                             if (!VerifyParamValueType(paramValue, type))
                             {
-                                ConsoleWriter.WriteErrLine(string.Format("Illegal input parameter type (skipped). param: '{0}'. expected type: '{1}'. actual type: '{2}'", paramName, Enum.GetName(typeof(qtParameterType), type), paramValue.GetType()));
+                                ConsoleWriter.WriteErrLine(string.Format(ILLEGAL_INPUT_PARAM_TYPE_FORMAT, paramName, Enum.GetName(typeof(qtParameterType), type), paramValue.GetType()));
                             }
                             else
                             {
@@ -924,7 +922,7 @@ namespace HpToolsLauncher
                         IterationInfo ii = testInfo.IterationInfo;
                         if (!IterationInfo.AvailableTypes.Contains(ii.IterationMode))
                         {
-                            throw new ArgumentException(string.Format("Illegal iteration mode '{0}'. Available modes are : {1}", ii.IterationMode, string.Join(", ", IterationInfo.AvailableTypes)));
+                            throw new ArgumentException(string.Format(ILLEGAL_ITERATION_MODE_FORMAT, ii.IterationMode, string.Join(COMMA_SPACE, IterationInfo.AvailableTypes)));
                         }
 
                         string range = string.Empty;

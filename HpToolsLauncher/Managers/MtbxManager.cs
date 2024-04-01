@@ -38,6 +38,7 @@ using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
 using System.Xml.Schema;
+using HpToolsLauncher.Common;
 using HpToolsLauncher.Properties;
 using HpToolsLauncher.TestRunners;
 
