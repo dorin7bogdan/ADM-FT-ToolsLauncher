@@ -58,8 +58,8 @@ namespace HpToolsLauncher
         private const char BACKSLAH = '\\';
         private const string FAILED = "Failed";
         private const string COMMA = ",";
-        private readonly char[] BACKSLASH_CHAR_ARR = new char[] { BACKSLAH };
-        private readonly char[] COMMA_CHAR_ARR = new char[] { ',' };
+        private readonly char[] BACKSLASH_CHAR_ARR = [BACKSLAH];
+        private readonly char[] COMMA_CHAR_ARR = [','];
 
         public ITDConnection13 TdConnection
         {

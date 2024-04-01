@@ -36,12 +36,21 @@ using System.Xml;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using HpToolsLauncher.Utils;
 
 namespace HpToolsLauncher
 {
     public class JunitXmlBuilder : IXmlBuilder
     {
         private const string DATETIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
+        private const string DOT = ".";
+        private const string UNDERSCORE = "_";
+        private const string PASS = "pass";
+        private const string FAIL = "fail";
+        private const string ERROR = "error";
+        private const string WARNING = "warning";
+        private const string SKIPPED = "skipped";
+
         private string _xmlName = "APIResults.xml";
         private CultureInfo _culture;
 
@@ -57,7 +66,6 @@ namespace HpToolsLauncher
         }
         public bool TestNameOnly { get; set; }
         public bool UnifiedTestClassname { get; set; }
-        //public const string ClassName = "uftRunner";
         public const string ClassName = "FTToolsLauncher";
         public const string RootName = "uftRunnerRoot";
 
@@ -178,12 +186,10 @@ namespace HpToolsLauncher
                 }
 
                 // NOTE: if the file already exists it will be overwritten / replaced, the entire _testSuites will be serialized every time
-                using (Stream s = File.Open(_xmlName, FileMode.Create, FileAccess.Write, FileShare.Read))
-                {
-                    _serializer.Serialize(s, _testSuites);
-                }
+                using Stream s = File.Open(_xmlName, FileMode.Create, FileAccess.Write, FileShare.Read);
+                _serializer.Serialize(s, _testSuites);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 ConsoleWriter.WriteErrLine(ex.ToString());
             }
@@ -213,13 +219,11 @@ namespace HpToolsLauncher
                     var generalNode = xdoc.DocumentElement.SelectSingleNode("General");
                     if (generalNode != null)
                     {
-                        var vUsersNode = generalNode.SelectSingleNode("VUsers") as XmlElement;
-                        if (vUsersNode != null)
+                        if (generalNode.SelectSingleNode("VUsers") is XmlElement vUsersNode)
                         {
                             if (vUsersNode.HasAttribute("Count"))
                             {
-                                int vUsersCount = 0;
-                                if (int.TryParse(vUsersNode.Attributes["Count"].Value, out vUsersCount))
+                                if (int.TryParse(vUsersNode.Attributes["Count"].Value, out int vUsersCount))
                                 {
                                     generalInfo.VUsersCount = vUsersCount;
                                 }
@@ -243,18 +247,17 @@ namespace HpToolsLauncher
                     {
                         foreach (var slaGoalNode in slaGoalNodes)
                         {
-                            var slaGoalElement = slaGoalNode as XmlElement;
-                            if (slaGoalElement != null)
+                            if (slaGoalNode is XmlElement slaGoalEl)
                             {
                                 slaGoals.Add(new LRRunSLAGoalResult
                                 {
-                                    TransactionName = slaGoalElement.GetAttribute("TransactionName"),
-                                    Percentile = slaGoalElement.GetAttribute("Percentile"),
-                                    FullName = slaGoalElement.GetAttribute("FullName"),
-                                    Measurement = slaGoalElement.GetAttribute("Measurement"),
-                                    GoalValue = slaGoalElement.GetAttribute("GoalValue"),
-                                    ActualValue = slaGoalElement.GetAttribute("ActualValue"),
-                                    Status = slaGoalElement.InnerText
+                                    TransactionName = slaGoalEl.GetAttribute("TransactionName"),
+                                    Percentile = slaGoalEl.GetAttribute("Percentile"),
+                                    FullName = slaGoalEl.GetAttribute("FullName"),
+                                    Measurement = slaGoalEl.GetAttribute("Measurement"),
+                                    GoalValue = slaGoalEl.GetAttribute("GoalValue"),
+                                    ActualValue = slaGoalEl.GetAttribute("ActualValue"),
+                                    Status = slaGoalEl.InnerText
                                 });
                             }
                         }
@@ -271,14 +274,14 @@ namespace HpToolsLauncher
             // testsuite properties
             lrts.properties =
                 [
-                    new property{ name = "Total vUsers", value = IntToString(generalInfo.VUsersCount) }
+                    new property { name = "Total vUsers", value = IntToString(generalInfo.VUsersCount) }
                 ];
 
             double totalSeconds = testRes.Runtime.TotalSeconds;
             lrts.time = DoubleToString(totalSeconds);
 
             // testcases
-            foreach(var slaGoal in slaGoals)
+            foreach (var slaGoal in slaGoals)
             {
                 testcase tc = new()
                 {
@@ -295,7 +298,7 @@ namespace HpToolsLauncher
                     case "fail":
                         tc.status = "fail";
                         tc.AddFailure(new failure
-                        { 
+                        {
                             message = string.Format("The goal value '{0}' does not equal to the actual value '{1}'", slaGoal.GoalValue, slaGoal.ActualValue)
                         });
                         totalFailures++;
@@ -305,7 +308,7 @@ namespace HpToolsLauncher
                         tc.status = "error";
                         tc.AddError(new error
                         {
-                            message =  testRes.ErrorDesc
+                            message = testRes.ErrorDesc
                         });
                         totalErrors++;
                         break;
@@ -334,7 +337,7 @@ namespace HpToolsLauncher
             string testcaseName = testRes.TestPath;
             if (TestNameOnly)
             {
-                testcaseName = string.IsNullOrEmpty(testRes.TestName) ? new DirectoryInfo(testRes.TestPath).Name : testRes.TestName;
+                testcaseName = testRes.TestName.IsNullOrEmpty() ? new DirectoryInfo(testRes.TestPath).Name : testRes.TestName;
             }
             string classname;
             if (UnifiedTestClassname)
@@ -351,10 +354,10 @@ namespace HpToolsLauncher
             }
             else
             {
-                classname = "All-Tests." + ((testRes.TestGroup == null) ? string.Empty : testRes.TestGroup.Replace(".", "_"));
+                classname = $"All-Tests.{testRes.TestGroup?.Replace(DOT, UNDERSCORE)}";
             }
 
-            testcase tc = new testcase
+            testcase tc = new()
             {
                 systemout = testRes.ConsoleOut,
                 systemerr = testRes.ConsoleErr,
@@ -366,31 +369,19 @@ namespace HpToolsLauncher
                 startExecDateTime = testRes.StartDateTime.HasValue ? testRes.StartDateTime.Value.ToString(DATETIME_PATTERN) : string.Empty
             };
 
-            if (!string.IsNullOrWhiteSpace(testRes.FailureDesc))
+            if (!testRes.FailureDesc.IsNullOrWhiteSpace())
                 tc.AddFailure(new failure { message = testRes.FailureDesc });
 
-            switch (testRes.TestState)
+            tc.status = testRes.TestState switch
             {
-                case TestState.Passed:
-                    tc.status = "pass";
-                    break;
-                case TestState.Failed:
-                    tc.status = "fail";
-                    break;
-                case TestState.Error:
-                    tc.status = "error";
-                    break;
-                case TestState.Warning:
-                    tc.status = "warning";
-                    break;
-                case TestState.NoRun:
-                    tc.status = "skipped";
-                    break;
-                default:
-                    tc.status = "pass";
-                    break;
-            }
-            if (!string.IsNullOrWhiteSpace(testRes.ErrorDesc))
+                TestState.Passed => PASS,
+                TestState.Failed => FAIL,
+                TestState.Error => ERROR,
+                TestState.Warning => WARNING,
+                TestState.NoRun => SKIPPED,
+                _ => PASS
+            };
+            if (!testRes.ErrorDesc.IsNullOrWhiteSpace())
                 tc.AddError(new error { message = testRes.ErrorDesc });
             return tc;
         }
@@ -420,6 +411,5 @@ namespace HpToolsLauncher
             public string ActualValue { get; set; }
             public string Status { get; set; }
         }
-
     }
 }

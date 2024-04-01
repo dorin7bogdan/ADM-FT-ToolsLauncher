@@ -330,7 +330,7 @@ namespace HpToolsLauncher
                     }
                     catch (Exception ex)
                     {
-                        runResult = new TestRunResults
+                        runResult = new()
                         {
                             TestState = TestState.Error,
                             ErrorDesc = ex.Message,
@@ -353,7 +353,7 @@ namespace HpToolsLauncher
                         }
                         else
                         {
-                            if (string.IsNullOrEmpty(runResult.ErrorDesc))
+                            if (runResult.ErrorDesc.IsNullOrEmpty())
                             {
                                 runResult.ErrorDesc = RunCancelled() ? Resources.ExceptionUserCancelled : Resources.ExceptionExternalProcess;
                             }

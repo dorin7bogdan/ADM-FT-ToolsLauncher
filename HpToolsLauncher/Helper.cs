@@ -39,8 +39,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
-using System.Xml.Linq;
-using System.Xml.XPath;
 using HpToolsLauncher.Properties;
 using HpToolsLauncher.Utils;
 using Microsoft.Win32;
@@ -117,6 +115,7 @@ namespace HpToolsLauncher
         private const string SLA_XML = "SLA.xml";
         private const string RUN_RESULTS_XML = "run_results.xml";
 
+        private const string ST_SEARCH_PATTERN = @"*.st?";
         public const string _ST = ".st";
         public const string _TSP = ".tsp";
         public const string _LRS = ".lrs";
@@ -397,7 +396,7 @@ namespace HpToolsLauncher
         public static List<string> GetTestsLocations(string baseDir)
         {
             List<string> testsLocations = [];
-            if (string.IsNullOrEmpty(baseDir) || !Directory.Exists(baseDir))
+            if (baseDir.IsNullOrEmpty() || !Directory.Exists(baseDir))
             {
                 return testsLocations;
             }
@@ -411,8 +410,7 @@ namespace HpToolsLauncher
             if ((File.GetAttributes(path) & FileAttributes.Directory) == FileAttributes.Directory)
             {
                 //ST and QTP uses folder as test locations
-                var stFiles = Directory.GetFiles(path, @"*.st?", SearchOption.TopDirectoryOnly);
-                return stFiles.Any() ? TestType.ST : TestType.QTP;
+                return Directory.EnumerateFiles(path, ST_SEARCH_PATTERN, SearchOption.TopDirectoryOnly).Any() ? TestType.ST : TestType.QTP;
             }
             else //not directory
             {
@@ -479,30 +477,13 @@ namespace HpToolsLauncher
 
         public static string GetTempDir()
         {
+            const string DASH = "-";
             string baseTemp = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
-            string dirName = Guid.NewGuid().ToString().Replace("-", string.Empty).Substring(0, 6);
+            string dirName = Guid.NewGuid().ToString().Replace(DASH, string.Empty).Substring(0, 6);
             string tempDirPath = Path.Combine(baseTemp, dirName);
 
             return tempDirPath;
-        }
-
-        public static string CreateTempDir()
-        {
-            string tempDirPath = GetTempDir();
-
-            Directory.CreateDirectory(tempDirPath);
-
-            return tempDirPath;
-        }
-
-        public static bool IsNetworkPath(string path)
-        {
-            if (path.StartsWith(@"\\"))
-                return true;
-            var dir = new DirectoryInfo(path);
-            var drive = new DriveInfo(dir.Root.ToString());
-            return drive.DriveType == DriveType.Network;
         }
 
         public static bool IsLeanFTRunning()
@@ -663,8 +644,8 @@ namespace HpToolsLauncher
         /// <returns> True if the report path was set, false otherwise </returns>
         public static bool TrySetTestReportPath(TestRunResults runResults, TestInfo testInfo, ref string errorReason)
         {
-            string testName = testInfo.TestName.Substring(testInfo.TestName.LastIndexOf('\\') + 1) + "_";
-            string reportLocation = GetNextResFolder(testInfo.ReportBaseDirectory, testName);
+            string testName = testInfo.TestName.Substring(testInfo.TestName.LastIndexOf('\\') + 1);
+            string reportLocation = GetNextResFolder(testInfo.ReportBaseDirectory, $"{testName}_");
 
             // set the report location for the run results
             runResults.ReportLocation = reportLocation;
@@ -682,54 +663,22 @@ namespace HpToolsLauncher
             return true;
         }
 
-        public static string GetLastRunFromReport(string reportPath)
-        {
-            if (!Directory.Exists(reportPath))
-                return null;
-            string resultsFileFullPath = reportPath + @"\" + RESULTS_XML;
-            if (!File.Exists(resultsFileFullPath))
-                return null;
-            try
-            {
-                var root = XElement.Load(resultsFileFullPath);
-
-                var element = root.XPathSelectElement("//Doc/Summary");
-                var lastStartRun = element.Attribute("sTime");
-                return lastStartRun.Value.Split(new char[] {' '})[0];
-
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-
         public static TestState GetTestStateFromUFTReport(TestRunResults runDesc, string resultsFileFullPath)
         {
             try
             {
-                TestState finalState = TestState.Unknown;
-
-                finalState = TestState.Unknown;
-                TestState state = GetStateFromUFTResultsFile(resultsFileFullPath, out string desc);
-                if (finalState.In(TestState.Unknown, TestState.Passed))
+                TestState finalState = GetStateFromUFTResultsFile(resultsFileFullPath, out string desc);
+                if (!desc.IsNullOrWhiteSpace())
                 {
-                    finalState = state;
-                    if (!desc.IsNullOrWhiteSpace())
+                    if (finalState == TestState.Error)
                     {
-                        if (finalState == TestState.Error)
-                        {
-                            runDesc.ErrorDesc = desc;
-                        }
-                        if (finalState == TestState.Failed)
-                        {
-                            runDesc.FailureDesc = desc; 
-                        }
+                        runDesc.ErrorDesc = desc;
+                    }
+                    else if (finalState == TestState.Failed)
+                    {
+                        runDesc.FailureDesc = desc; 
                     }
                 }
-
-                if (finalState == TestState.Unknown)
-                    finalState = TestState.Passed;
 
                 if (finalState == TestState.Failed && runDesc.FailureDesc.IsNullOrWhiteSpace())
                     runDesc.FailureDesc = TEST_FAILED;
@@ -745,11 +694,9 @@ namespace HpToolsLauncher
 
         public static TestState GetTestStateFromLRReport(TestRunResults runDesc, string[] resultFiles)
         {
-
             foreach (string resultFileFullPath in resultFiles)
             {
-                string desc = "";
-                runDesc.TestState = GetTestStateFromLRReport(resultFileFullPath, out desc);
+                runDesc.TestState = GetTestStateFromLRReport(resultFileFullPath, out string desc);
                 if (runDesc.TestState == TestState.Failed)
                 {
                     runDesc.ErrorDesc = desc;
@@ -807,7 +754,6 @@ namespace HpToolsLauncher
             {
                 return TestState.Unknown;
             }
-
         }
 
         private static TestState GetTestStateFromLRReport(string resultFileFullPath, out string desc)
@@ -827,7 +773,7 @@ namespace HpToolsLauncher
             {
                 if (node.InnerText.ToLowerInvariant() == "failed")
                 {
-                    if (node.Attributes != null && node.Attributes["FullName"] != null)
+                    if (node.Attributes?["FullName"] != null)
                     {
                         desc = string.Format(Resources.LrSLARuleFailed, node.Attributes["FullName"].Value,
                             node.Attributes["GoalValue"].Value, node.Attributes["ActualValue"].Value);
@@ -846,7 +792,7 @@ namespace HpToolsLauncher
                 TestState res = CheckNodeStatus(childNode, out desc);
                 if (res == TestState.Failed)
                 {
-                    if (string.IsNullOrEmpty(desc) && node.Attributes != null && node.Attributes["FullName"] != null)
+                    if (desc.IsNullOrEmpty() && node.Attributes?["FullName"] != null)
                     {
                         desc = string.Format(Resources.LrSLARuleFailed, node.Attributes["FullName"].Value,
                             node.Attributes["GoalValue"].Value, node.Attributes["ActualValue"].Value);
