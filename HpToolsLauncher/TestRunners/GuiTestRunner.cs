@@ -41,8 +41,8 @@ using System.Diagnostics;
 using System.Collections.Generic;
 using HpToolsLauncher.TestRunners;
 using HpToolsLauncher.Common;
-using HpToolsLauncher.Utils;
 using static HpToolsLauncher.Common.McConnectionInfo;
+using HpToolsLauncher.Interfaces;
 
 namespace HpToolsLauncher
 {

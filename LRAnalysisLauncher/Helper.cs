@@ -34,7 +34,7 @@ using System;
 using System.Collections.Generic;
 using Analysis.Api;
 using Analysis.ApiLib;
-using HpToolsLauncher;
+using HpToolsLauncher.Common;
 using LRAnalysisLauncher.Properties;
 
 namespace LRAnalysisLauncher

@@ -40,6 +40,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using HpToolsLauncher.Common;
 using HpToolsLauncher.Properties;
 using Mercury.TD.Client.Ota.QC9;
 

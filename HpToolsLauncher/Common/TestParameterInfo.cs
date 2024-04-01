@@ -32,7 +32,7 @@
 
 using System;
 
-namespace HpToolsLauncher
+namespace HpToolsLauncher.Common
 {
     public class TestParameterInfo
     {

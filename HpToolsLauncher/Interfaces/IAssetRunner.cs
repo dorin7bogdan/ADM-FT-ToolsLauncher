@@ -30,8 +30,9 @@
  * ___________________________________________________________________
  */
 
+using HpToolsLauncher.Common;
 using System;
-namespace HpToolsLauncher
+namespace HpToolsLauncher.Interfaces
 {
     public interface IAssetRunner : IDisposable
     {

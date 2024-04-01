@@ -39,7 +39,7 @@ using HpToolsLauncher.Properties;
 using HpToolsLauncher.TestRunners;
 using HpToolsLauncher.RTS;
 using HpToolsLauncher.Common;
-using HpToolsLauncher.Utils;
+using HpToolsLauncher.Interfaces;
 
 namespace HpToolsLauncher
 {

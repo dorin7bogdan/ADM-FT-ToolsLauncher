@@ -40,10 +40,9 @@ using System.Linq;
 using System.Reflection;
 using System.Xml;
 using HpToolsLauncher.Properties;
-using HpToolsLauncher.Utils;
 using Microsoft.Win32;
 
-namespace HpToolsLauncher
+namespace HpToolsLauncher.Common
 {
     public enum TestType
     {

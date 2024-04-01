@@ -34,7 +34,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace HpToolsLauncher
+namespace HpToolsLauncher.Common
 {
     public static class NativeProcess
     {

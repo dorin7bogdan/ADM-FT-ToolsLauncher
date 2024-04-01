@@ -40,6 +40,8 @@ using HP.LoadRunner.Interop.Wlrun;
 using HpToolsLauncher.Properties;
 using System.Xml;
 using HpToolsLauncher.RTS;
+using HpToolsLauncher.Common;
+using HpToolsLauncher.Interfaces;
 
 namespace HpToolsLauncher.TestRunners
 {

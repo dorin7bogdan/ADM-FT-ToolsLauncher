@@ -36,7 +36,8 @@ using System.Xml;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using HpToolsLauncher.Utils;
+using HpToolsLauncher.Interfaces;
+using HpToolsLauncher.Common;
 
 namespace HpToolsLauncher
 {

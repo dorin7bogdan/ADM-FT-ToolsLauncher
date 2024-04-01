@@ -32,7 +32,6 @@
 
 using HpToolsLauncher.Common;
 using HpToolsLauncher.ParallelTestRunConfiguraion;
-using HpToolsLauncher.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;

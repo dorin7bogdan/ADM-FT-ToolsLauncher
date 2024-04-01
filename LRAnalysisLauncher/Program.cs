@@ -40,12 +40,13 @@ using LRAnalysisLauncher.Properties;
 using HpToolsLauncher;
 using Analysis.Api.Dictionaries;
 using System.Globalization;
+using HpToolsLauncher.Common;
+using System.Reflection;
 
 namespace LRAnalysisLauncher
 {
     class Program
     {
-
         static Program()
         {
             AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
@@ -65,7 +66,7 @@ namespace LRAnalysisLauncher
         [STAThread]
         static int Main(string[] args)
         {
-            HpToolsLauncher.ConsoleQuickEdit.Disable();
+            ConsoleQuickEdit.Disable();
             Console.OutputEncoding = System.Text.Encoding.GetEncoding("utf-8");
             log("starting analysis launcher");
             int iPassed = (int)Launcher.ExitCodeEnum.Passed;//variable to keep track of whether all of the SLAs passed
@@ -439,7 +440,6 @@ namespace LRAnalysisLauncher
                 }
                 else
                 {
-
                     log(Resources.CannotCreateSession);
                     return (int)Launcher.ExitCodeEnum.Aborted;
                 }
@@ -473,18 +473,18 @@ namespace LRAnalysisLauncher
 
         }
 
-        static System.Reflection.Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
-            System.Reflection.AssemblyName name = new System.Reflection.AssemblyName(args.Name);
+            AssemblyName name = new AssemblyName(args.Name);
             if (name.Name.ToLowerInvariant().EndsWith(".resources")) return null;
-            string installPath = HpToolsLauncher.Helper.GetLRInstallPath();
+            string installPath = HpToolsLauncher.Common.Helper.GetLRInstallPath();
             if (installPath == null)
             {
                 log(Resources.CannotLocateInstallDir);
                 Environment.Exit((int)Launcher.ExitCodeEnum.Aborted);
             }
             //log(Path.Combine(installPath, "bin", name.Name + ".dll"));
-            return System.Reflection.Assembly.LoadFrom(Path.Combine(installPath, "bin", name.Name + ".dll"));
+            return Assembly.LoadFrom(Path.Combine(installPath, "bin", name.Name + ".dll"));
         }
 
         private static void ShowHelp()

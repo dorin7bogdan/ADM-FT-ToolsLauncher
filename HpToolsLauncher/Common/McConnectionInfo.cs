@@ -1,5 +1,4 @@
 ﻿using HpToolsLauncher.Properties;
-using HpToolsLauncher.Utils;
 using System;
 using System.ComponentModel;
 using System.Text;
