@@ -147,195 +147,189 @@ namespace HpToolsLauncher.Common
 
         public McConnectionInfo(JavaProperties ciParams)
         {
-            if (ciParams.ContainsKey(MOBILEHOSTADDRESS))
+            string mcServerUrl = ciParams.GetOrDefault(MOBILEHOSTADDRESS).Trim();
+            if (mcServerUrl.IsNullOrEmpty())
             {
-                string mcServerUrl = ciParams[MOBILEHOSTADDRESS].Trim();
-                if (string.IsNullOrEmpty(mcServerUrl))
+                throw new NoMcConnectionException();
+            }
+
+            //ssl
+            if (ciParams.ContainsKey(MOBILEUSESSL))
+            {
+                string strUseSSL = ciParams[MOBILEUSESSL];
+                if (!strUseSSL.IsNullOrEmpty())
                 {
-                    throw new NoMcConnectionException();
+                    int.TryParse(ciParams[MOBILEUSESSL], out int intUseSSL);
+                    _useSSL = intUseSSL == ONE;
                 }
+            }
 
-                if (!mcServerUrl.IsNullOrEmpty())
+            //url is something like http://xxx.xxx.xxx.xxx:8080
+            string[] arr = mcServerUrl.Split(COLON, StringSplitOptions.RemoveEmptyEntries);
+            if (arr.Length == 1)
+            {
+                if (arr[0].Trim().In(true, HTTP, HTTPS))
+                    throw new ArgumentException(string.Format(Resources.McInvalidUrl, mcServerUrl));
+                _hostAddress = arr[0].TrimEnd(SLASH);
+                _hostPort = _useSSL ? PORT_443 : PORT_8080;
+            }
+            else if (arr.Length == 2)
+            {
+                if (arr[0].Trim().In(true, HTTP, HTTPS))
                 {
-                    //ssl
-                    if (ciParams.ContainsKey(MOBILEUSESSL))
-                    {
-                        string strUseSSL = ciParams[MOBILEUSESSL];
-                        if (!strUseSSL.IsNullOrEmpty())
-                        {
-                            int.TryParse(ciParams[MOBILEUSESSL], out int intUseSSL);
-                            _useSSL = intUseSSL == ONE;
-                        }
-                    }
+                    _hostAddress = arr[1].Trim(SLASH);
+                    _hostPort = _useSSL ? PORT_443 : PORT_8080;
+                }
+                else
+                {
+                    _hostAddress = arr[0].Trim(SLASH);
+                    _hostPort = arr[1].TrimEnd(SLASH);
+                }
+            }
+            else if (arr.Length == 3)
+            {
+                _hostAddress = arr[1].Trim(SLASH);
+                _hostPort = arr[2].TrimEnd(SLASH);
+            }
 
-                    //url is something like http://xxx.xxx.xxx.xxx:8080
-                    string[] arr = mcServerUrl.Split(COLON, StringSplitOptions.RemoveEmptyEntries);
-                    if (arr.Length == 1)
-                    {
-                        if (arr[0].Trim().In(true, HTTP, HTTPS))
-                            throw new ArgumentException(string.Format(Resources.McInvalidUrl, mcServerUrl));
-                        _hostAddress = arr[0].TrimEnd(SLASH);
-                        _hostPort = _useSSL ? PORT_443 : PORT_8080;
-                    }
-                    else if (arr.Length == 2)
-                    {
-                        if (arr[0].Trim().In(true, HTTP, HTTPS))
-                        {
-                            _hostAddress = arr[1].Trim(SLASH);
-                            _hostPort = _useSSL ? PORT_443 : PORT_8080;
-                        }
-                        else
-                        {
-                            _hostAddress = arr[0].Trim(SLASH);
-                            _hostPort = arr[1].TrimEnd(SLASH);
-                        }
-                    }
-                    else if (arr.Length == 3)
-                    {
-                        _hostAddress = arr[1].Trim(SLASH);
-                        _hostPort = arr[2].TrimEnd(SLASH);
-                    }
+            if (_hostAddress.Trim() == string.Empty)
+            {
+                throw new ArgumentException(Resources.McEmptyHostAddress);
+            }
 
-                    if (_hostAddress.Trim() == string.Empty)
-                    {
-                        throw new ArgumentException(Resources.McEmptyHostAddress);
-                    }
+            //mc username
+            if (ciParams.ContainsKey(MOBILEUSERNAME))
+            {
+                string mcUsername = ciParams[MOBILEUSERNAME];
+                if (!mcUsername.IsNullOrEmpty())
+                {
+                    _userName = mcUsername;
+                }
+            }
 
-                    //mc username
-                    if (ciParams.ContainsKey(MOBILEUSERNAME))
-                    {
-                        string mcUsername = ciParams[MOBILEUSERNAME];
-                        if (!mcUsername.IsNullOrEmpty())
-                        {
-                            _userName = mcUsername;
-                        }
-                    }
+            //mc password
+            if (ciParams.ContainsKey(MOBILEPASSWORDBASICAUTH))
+            {
+                // base64 decode
+                byte[] data = Convert.FromBase64String(ciParams[MOBILEPASSWORDBASICAUTH]);
+                _password = Encoding.Default.GetString(data);
+            }
+            else if (ciParams.ContainsKey(MOBILEPASSWORD))
+            {
+                string mcPassword = ciParams[MOBILEPASSWORD];
+                if (!mcPassword.IsNullOrEmpty())
+                {
+                    _password = Encrypter.Decrypt(mcPassword);
+                }
+            }
 
-                    //mc password
-                    if (ciParams.ContainsKey(MOBILEPASSWORDBASICAUTH))
+            //mc tenantId
+            _tenantId = ciParams.GetOrDefault(MOBILETENANTID).Trim();
+
+            if (ciParams.ContainsKey(MOBILECLIENTID))
+            {
+                string mcClientId = ciParams[MOBILECLIENTID];
+                if (!mcClientId.IsNullOrEmpty())
+                {
+                    _clientId = mcClientId;
+                    if (ciParams.ContainsKey(MOBILESECRETKEYBASICAUTH))
                     {
                         // base64 decode
-                        byte[] data = Convert.FromBase64String(ciParams[MOBILEPASSWORDBASICAUTH]);
-                        _password = Encoding.Default.GetString(data);
+                        byte[] data = Convert.FromBase64String(ciParams[MOBILESECRETKEYBASICAUTH]);
+                        _secretKey = Encoding.Default.GetString(data);
+                        _authType = AuthType.AuthToken;
                     }
-                    else if (ciParams.ContainsKey(MOBILEPASSWORD))
+                    else if (ciParams.ContainsKey(MOBILESECRETKEY))
                     {
-                        string mcPassword = ciParams[MOBILEPASSWORD];
-                        if (!mcPassword.IsNullOrEmpty())
+                        string mcSecretKey = ciParams[MOBILESECRETKEY];
+                        if (!mcSecretKey.IsNullOrEmpty())
                         {
-                            _password = Encrypter.Decrypt(mcPassword);
+                            _secretKey = Encrypter.Decrypt(mcSecretKey);
+                            _authType = AuthType.AuthToken;
                         }
                     }
+                }
+            }
 
-                    //mc tenantId
-                    _tenantId = ciParams.GetOrDefault(MOBILETENANTID).Trim();
+            if (ciParams.ContainsKey(DIGITALLABTYPE))
+            {
+                var dlLabType = ciParams[DIGITALLABTYPE];
+                if (!string.IsNullOrEmpty(dlLabType))
+                {
+                    Enum.TryParse(dlLabType, true, out _labType);
+                }
+            }
 
-                    if (ciParams.ContainsKey(MOBILECLIENTID))
+            //Proxy enabled flag
+            if (ciParams.ContainsKey(MOBILEUSEPROXY))
+            {
+                string strUseProxy = ciParams[MOBILEUSEPROXY];
+                if (!strUseProxy.IsNullOrEmpty())
+                {
+                    _useProxy = int.Parse(strUseProxy) == ONE;
+                }
+            }
+
+            //Proxy type
+            if (ciParams.ContainsKey(MOBILEPROXYTYPE))
+            {
+                string proxyType = ciParams[MOBILEPROXYTYPE];
+                if (!proxyType.IsNullOrEmpty())
+                {
+                    _proxyType = int.Parse(proxyType);
+                }
+            }
+
+            //proxy address
+            if (ciParams.ContainsKey(MOBILEPROXYSETTING_ADDRESS))
+            {
+                string proxyAddress = ciParams[MOBILEPROXYSETTING_ADDRESS];
+                if (!proxyAddress.IsNullOrEmpty())
+                {
+                    // data is something like "16.105.9.23:8080"
+                    string[] strArrayForProxyAddress = proxyAddress.Split(COLON);
+
+                    if (strArrayForProxyAddress.Length == 2)
                     {
-                        string mcClientId = ciParams[MOBILECLIENTID];
-                        if (!mcClientId.IsNullOrEmpty())
-                        {
-                            _clientId = mcClientId;
-                            if (ciParams.ContainsKey(MOBILESECRETKEYBASICAUTH))
-                            {
-                                // base64 decode
-                                byte[] data = Convert.FromBase64String(ciParams[MOBILESECRETKEYBASICAUTH]);
-                                _secretKey = Encoding.Default.GetString(data);
-                                _authType = AuthType.AuthToken;
-                            }
-                            else if (ciParams.ContainsKey(MOBILESECRETKEY))
-                            {
-                                string mcSecretKey = ciParams[MOBILESECRETKEY];
-                                if (!mcSecretKey.IsNullOrEmpty())
-                                {
-                                    _secretKey = Encrypter.Decrypt(mcSecretKey);
-                                    _authType = AuthType.AuthToken;
-                                }
-                            }
-                        }
+                        _proxyAddress = strArrayForProxyAddress[0];
+                        _proxyPort = int.Parse(strArrayForProxyAddress[1]);
                     }
+                }
+            }
 
-                    if (ciParams.ContainsKey(DIGITALLABTYPE))
-                    {
-                        var dlLabType = ciParams[DIGITALLABTYPE];
-                        if (!string.IsNullOrEmpty(dlLabType))
-                        {
-                            Enum.TryParse(dlLabType, true, out _labType);
-                        }
-                    }
+            //Proxy authentication
+            if (ciParams.ContainsKey(MOBILEPROXYSETTING_AUTH))
+            {
+                string proxyAuthentication = ciParams[MOBILEPROXYSETTING_AUTH];
+                if (!proxyAuthentication.IsNullOrEmpty())
+                {
+                    _useProxyAuth = int.Parse(proxyAuthentication) == ONE;
+                }
+            }
 
-                    //Proxy enabled flag
-                    if (ciParams.ContainsKey(MOBILEUSEPROXY))
-                    {
-                        string strUseProxy = ciParams[MOBILEUSEPROXY];
-                        if (!strUseProxy.IsNullOrEmpty())
-                        {
-                            _useProxy = int.Parse(strUseProxy) == ONE;
-                        }
-                    }
+            //Proxy username
+            if (ciParams.ContainsKey(MOBILEPROXYSETTING_USERNAME))
+            {
+                string proxyUsername = ciParams[MOBILEPROXYSETTING_USERNAME];
+                if (!proxyUsername.IsNullOrEmpty())
+                {
+                    _proxyUserName = proxyUsername;
+                }
+            }
 
-                    //Proxy type
-                    if (ciParams.ContainsKey(MOBILEPROXYTYPE))
-                    {
-                        string proxyType = ciParams[MOBILEPROXYTYPE];
-                        if (!proxyType.IsNullOrEmpty())
-                        {
-                            _proxyType = int.Parse(proxyType);
-                        }
-                    }
-
-                    //proxy address
-                    if (ciParams.ContainsKey(MOBILEPROXYSETTING_ADDRESS))
-                    {
-                        string proxyAddress = ciParams[MOBILEPROXYSETTING_ADDRESS];
-                        if (!proxyAddress.IsNullOrEmpty())
-                        {
-                            // data is something like "16.105.9.23:8080"
-                            string[] strArrayForProxyAddress = proxyAddress.Split(COLON);
-
-                            if (strArrayForProxyAddress.Length == 2)
-                            {
-                                _proxyAddress = strArrayForProxyAddress[0];
-                                _proxyPort = int.Parse(strArrayForProxyAddress[1]);
-                            }
-                        }
-                    }
-
-                    //Proxy authentication
-                    if (ciParams.ContainsKey(MOBILEPROXYSETTING_AUTH))
-                    {
-                        string proxyAuthentication = ciParams[MOBILEPROXYSETTING_AUTH];
-                        if (!proxyAuthentication.IsNullOrEmpty())
-                        {
-                            _useProxyAuth = int.Parse(proxyAuthentication) == ONE;
-                        }
-                    }
-
-                    //Proxy username
-                    if (ciParams.ContainsKey(MOBILEPROXYSETTING_USERNAME))
-                    {
-                        string proxyUsername = ciParams[MOBILEPROXYSETTING_USERNAME];
-                        if (!proxyUsername.IsNullOrEmpty())
-                        {
-                            _proxyUserName = proxyUsername;
-                        }
-                    }
-
-                    //Proxy password
-                    if (ciParams.ContainsKey(MOBILEPROXYSETTING_PASSWORDBASICAUTH))
-                    {
-                        // base64 decode
-                        byte[] data = Convert.FromBase64String(ciParams[MOBILEPROXYSETTING_PASSWORDBASICAUTH]);
-                        _proxyPassword = Encoding.Default.GetString(data);
-                    }
-                    else if (ciParams.ContainsKey(MOBILEPROXYSETTING_PASSWORD))
-                    {
-                        string proxyPassword = ciParams[MOBILEPROXYSETTING_PASSWORD];
-                        if (!proxyPassword.IsNullOrEmpty())
-                        {
-                            _proxyPassword = Encrypter.Decrypt(proxyPassword);
-                        }
-                    }
+            //Proxy password
+            if (ciParams.ContainsKey(MOBILEPROXYSETTING_PASSWORDBASICAUTH))
+            {
+                // base64 decode
+                byte[] data = Convert.FromBase64String(ciParams[MOBILEPROXYSETTING_PASSWORDBASICAUTH]);
+                _proxyPassword = Encoding.Default.GetString(data);
+            }
+            else if (ciParams.ContainsKey(MOBILEPROXYSETTING_PASSWORD))
+            {
+                string proxyPassword = ciParams[MOBILEPROXYSETTING_PASSWORD];
+                if (!proxyPassword.IsNullOrEmpty())
+                {
+                    _proxyPassword = Encrypter.Decrypt(proxyPassword);
                 }
             }
         }
@@ -355,7 +349,7 @@ namespace HpToolsLauncher.Common
             {
                 usernameOrClientId = $"Username: {UserName}";
             }
-            string strProxy = $"UseProxy: {(_useProxy ? YES: NO)}";
+            string strProxy = $"UseProxy: {(_useProxy ? YES : NO)}";
             if (_useProxy)
             {
                 strProxy += $", ProxyType: {ProxyTypeAsString}, ProxyAddress: {_proxyAddress}, ProxyPort: {_proxyPort}, ProxyAuth: {UseProxyAuthAsString}, ProxyUser: {_proxyUserName}";
@@ -432,19 +426,14 @@ namespace HpToolsLauncher.Common
         }
     }
 
-    public class DigitalLab
+    public class DigitalLab(McConnectionInfo mcConnInfo, string mobileInfo, CloudBrowser cloudBrowser)
     {
-        private McConnectionInfo _connInfo;
-        private string _mobileInfo;
-        private CloudBrowser _cloudBrowser;
-        public DigitalLab(McConnectionInfo mcConnInfo, string mobileInfo, CloudBrowser cloudBrowser)
-        {
-            _connInfo = mcConnInfo;
-            _mobileInfo = mobileInfo;
-            _cloudBrowser = cloudBrowser;
-        }
-        public McConnectionInfo ConnectionInfo { get { return _connInfo; } }
-        public string MobileInfo { get { return _mobileInfo; } }
-        public CloudBrowser CloudBrowser { get { return _cloudBrowser; } }
+        private readonly McConnectionInfo _connInfo = mcConnInfo;
+        private readonly string _mobileInfo = mobileInfo;
+        private readonly CloudBrowser _cloudBrowser = cloudBrowser;
+
+        public McConnectionInfo ConnectionInfo => _connInfo;
+        public string MobileInfo => _mobileInfo;
+        public CloudBrowser CloudBrowser => _cloudBrowser;
     }
 }
