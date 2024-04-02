@@ -46,7 +46,6 @@ namespace HpToolsLauncher
 {
     public class MtbxManager
     {
-
         //the xml format of an mtbx file below:
         /*
          <Mtbx>
@@ -64,6 +63,24 @@ namespace HpToolsLauncher
             </Test>
          </Mtbx>
         */
+
+        private const string HTL_MTBXSCHEMA_XSD = "HpToolsLauncher.Common.MtbxSchema.xsd";
+        private const string TEST = "Test";
+        private const string PATH = "path";
+        private const string REPORT_PATH = "reportPath";
+        private const string REPORT_EXACT_PATH = "reportExactPath";
+        private const string NAME = "name";
+        private const string UNNAMED_TEST = "Unnamed Test";
+        private const string PARAMETER = "Parameter";
+        private const string VALUE = "value";
+        private const string TYPE = "type";
+        private const string STRING = "string";
+        private const string DATA_TABLE = "DataTable";
+        private const string ITERATIONS = "Iterations";
+        private const string MODE = "mode";
+        private const string START = "start";
+        private const string END = "end";
+
         public static List<TestInfo> LoadMtbx(string mtbxContent, string testGroup)
         {
             return LoadMtbx(mtbxContent, null, testGroup);
@@ -71,20 +88,17 @@ namespace HpToolsLauncher
 
         private static XAttribute GetAttribute(XElement x, XName attributeName)
         {
-            return x.Attributes().FirstOrDefault(a => a.Name.Namespace == attributeName.Namespace
-            && string.Equals(a.Name.LocalName, attributeName.LocalName, StringComparison.OrdinalIgnoreCase));
+            return x.Attributes().FirstOrDefault(a => a.Name.Namespace == attributeName.Namespace && a.Name.LocalName.EqualsIgnoreCase(attributeName.LocalName));
         }
 
         private static XElement GetElement(XElement x, XName eName)
         {
-            return x.Elements().FirstOrDefault(a => a.Name.Namespace == eName.Namespace
-             && string.Equals(a.Name.LocalName, eName.LocalName, StringComparison.OrdinalIgnoreCase));
+            return x.Elements().FirstOrDefault(a => a.Name.Namespace == eName.Namespace && a.Name.LocalName.EqualsIgnoreCase(eName.LocalName));
         }
 
         private static IEnumerable<XElement> GetElements(XElement x, XName eName)
         {
-            return x.Elements().Where(a => a.Name.Namespace == eName.Namespace
-             && string.Equals(a.Name.LocalName, eName.LocalName, StringComparison.OrdinalIgnoreCase));
+            return x.Elements().Where(a => a.Name.Namespace == eName.Namespace && a.Name.LocalName.EqualsIgnoreCase(eName.LocalName));
         }
 
         public static List<TestInfo> Parse(string mtbxFileName, Dictionary<string, string> jenkinsEnvironmentVars, string testGroupName)
@@ -93,7 +107,7 @@ namespace HpToolsLauncher
             try
             {
                 xmlContent = File.ReadAllText(mtbxFileName);
-                if (string.IsNullOrWhiteSpace(xmlContent))
+                if (xmlContent.IsNullOrWhiteSpace())
                 {
                     string err = string.Format(Resources.EmptyFileProvided, mtbxFileName);
                     ConsoleWriter.WriteLine($"Error: {err}");
@@ -137,8 +151,8 @@ namespace HpToolsLauncher
             foreach (string varName in localEnv.Keys)
             {
                 string value = (string)localEnv[varName];
-                xmlContent = ReplaceString(xmlContent, "%" + varName + "%", value);
-                xmlContent = ReplaceString(xmlContent, "${" + varName + "}", value);
+                xmlContent = ReplaceString(xmlContent, $"%{varName}%", value);
+                xmlContent = ReplaceString(xmlContent, $"${{{varName}}}", value);
             }
 
             if (jankinsEnvironmentVars != null)
@@ -146,8 +160,8 @@ namespace HpToolsLauncher
                 foreach (string varName in jankinsEnvironmentVars.Keys)
                 {
                     string value = jankinsEnvironmentVars[varName];
-                    xmlContent = ReplaceString(xmlContent, "%" + varName + "%", value);
-                    xmlContent = ReplaceString(xmlContent, "${" + varName + "}", value);
+                    xmlContent = ReplaceString(xmlContent, $"%{varName}%", value);
+                    xmlContent = ReplaceString(xmlContent, $"${{{varName}}}", value);
                 }
             }
 
@@ -155,33 +169,29 @@ namespace HpToolsLauncher
             XDocument doc = XDocument.Parse(xmlContent);
 
             XmlSchemaSet schemas = new();
-
             var assembly = Assembly.GetExecutingAssembly();
-
-            var schemaStream = assembly.GetManifestResourceStream("HpToolsLauncher.MtbxSchema.xsd");
-
+            var schemaStream = assembly.GetManifestResourceStream(HTL_MTBXSCHEMA_XSD);
             XmlSchema schema = XmlSchema.Read(schemaStream, null);
-
             schemas.Add(schema);
 
             string validationMessages = string.Empty;
             doc.Validate(schemas, (o, e) =>
             {
-                validationMessages += e.Message + Environment.NewLine;
+                validationMessages += $"{e.Message}{Environment.NewLine}";
                 ConsoleWriter.ErrorSummaryLines.Add(e.Message);
             });
 
-            if (!string.IsNullOrWhiteSpace(validationMessages))
+            if (!validationMessages.IsNullOrWhiteSpace())
             {
-                ConsoleWriter.WriteLine("mtbx schema validation errors: " + validationMessages);
+                ConsoleWriter.WriteLine($"mtbx schema validation errors: {validationMessages}");
             }
             try
             {
                 var root = doc.Root;
-                foreach (var test in GetElements(root, "Test"))
+                foreach (var test in GetElements(root, TEST))
                 {
-                    string path = GetAttribute(test, "path").Value;
-                    if (string.IsNullOrWhiteSpace(path))
+                    string path = GetAttribute(test, PATH).Value;
+                    if (path.IsNullOrWhiteSpace())
                     {
                         string err = string.Format(Resources.EmptyPathAttributeValue, path);
                         ConsoleWriter.WriteLine($"Error: {err}");
@@ -199,7 +209,7 @@ namespace HpToolsLauncher
                     }
 
                     // optional report path attribute (report base directory, for backward compatibility)
-                    XAttribute xReportBasePath = GetAttribute(test, "reportPath");
+                    XAttribute xReportBasePath = GetAttribute(test, REPORT_PATH);
                     string reportBasePath = null;
                     if (xReportBasePath != null)
                     {
@@ -207,16 +217,16 @@ namespace HpToolsLauncher
                     }
 
                     // optional report directory path attribute (exact report path)
-                    XAttribute xReportExactPath = GetAttribute(test, "reportExactPath");
+                    XAttribute xReportExactPath = GetAttribute(test, REPORT_EXACT_PATH);
                     string reportExactPath = null;
                     if (xReportExactPath != null)
                     {
                         reportExactPath = xReportExactPath.Value;
                     }
 
-                    XAttribute xname = GetAttribute(test, "name");
-                    string name = string.IsNullOrWhiteSpace(xname?.Value) ? "Unnamed Test" : xname.Value;
-                    TestInfo col = new TestInfo(path, name, testGroupName)
+                    XAttribute xname = GetAttribute(test, NAME);
+                    string name = xname?.Value.IsNullOrWhiteSpace() == true ? UNNAMED_TEST : xname.Value;
+                    TestInfo col = new(path, name, testGroupName)
                     {
                         ReportBaseDirectory = reportBasePath,
                         ReportPath = reportExactPath
@@ -224,17 +234,17 @@ namespace HpToolsLauncher
 
                     HashSet<string> paramNames = [];
 
-                    foreach (var param in GetElements(test, "Parameter"))
+                    foreach (var param in GetElements(test, PARAMETER))
                     {
-                        string pname = GetAttribute(param, "name").Value;
-                        string pval = GetAttribute(param, "value").Value;
-                        XAttribute xptype = GetAttribute(param, "type");
-                        string ptype = "string";
+                        string pname = GetAttribute(param, NAME).Value;
+                        string pval = GetAttribute(param, VALUE).Value;
+                        XAttribute xptype = GetAttribute(param, TYPE);
+                        string ptype = STRING;
 
                         if (xptype != null)
                             ptype = xptype.Value;
 
-                        var testParam = new TestParameterInfo() { Name = pname, Type = ptype, Value = pval };
+                        TestParameterInfo testParam = new() { Name = pname, Type = ptype, Value = pval };
                         if (!paramNames.Contains(testParam.Name))
                         {
                             paramNames.Add(testParam.Name);
@@ -247,27 +257,27 @@ namespace HpToolsLauncher
                         }
                     }
 
-                    XElement dataTable = GetElement(test, "DataTable");
+                    XElement dataTable = GetElement(test, DATA_TABLE);
                     if (dataTable != null)
                     {
-                        col.DataTablePath = GetAttribute(dataTable, "path").Value;
+                        col.DataTablePath = GetAttribute(dataTable, PATH).Value;
                     }
 
-                    XElement iterations = GetElement(test, "Iterations");
+                    XElement iterations = GetElement(test, ITERATIONS);
                     if (iterations != null)
                     {
                         IterationInfo ii = new();
-                        XAttribute modeAttr = GetAttribute(iterations, "mode");
+                        XAttribute modeAttr = GetAttribute(iterations, MODE);
                         if (modeAttr != null)
                         {
                             ii.IterationMode = modeAttr.Value;
                         }
-                        XAttribute startAttr = GetAttribute(iterations, "start");
+                        XAttribute startAttr = GetAttribute(iterations, START);
                         if (startAttr != null)
                         {
                             ii.StartIteration = startAttr.Value;
                         }
-                        XAttribute endAttr = GetAttribute(iterations, "end");
+                        XAttribute endAttr = GetAttribute(iterations, END);
                         if (endAttr != null)
                         {
                             ii.EndIteration = endAttr.Value;
