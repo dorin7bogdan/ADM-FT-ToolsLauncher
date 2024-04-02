@@ -64,7 +64,7 @@ namespace HpToolsLauncher
          </Mtbx>
         */
 
-        private const string HTL_MTBXSCHEMA_XSD = "HpToolsLauncher.Common.MtbxSchema.xsd";
+        private const string HTL_MTBXSCHEMA_XSD = "HpToolsLauncher.Properties.MtbxSchema.xsd";
         private const string TEST = "Test";
         private const string PATH = "path";
         private const string REPORT_PATH = "reportPath";

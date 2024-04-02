@@ -37,9 +37,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using HpToolsLauncher.Interfaces;
-using HpToolsLauncher.Common;
 
-namespace HpToolsLauncher
+namespace HpToolsLauncher.Common
 {
     public class JunitXmlBuilder : IXmlBuilder
     {
