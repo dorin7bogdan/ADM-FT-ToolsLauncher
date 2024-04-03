@@ -5,7 +5,7 @@
  * __________________________________________________________________
  * MIT License
  *
- * Copyright 2012-2023 Open Text
+ * Copyright 2012-2024 Open Text
  *
  * The only warranties for products and services of Open Text and
  * its affiliates and licensors ("Open Text") are as may be set forth
@@ -41,7 +41,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("OpenText")]
 [assembly: AssemblyProduct("UFT One CI Utilities")]
-[assembly: AssemblyCopyright("Copyright 2020-2023 Open Text")]
+[assembly: AssemblyCopyright("Copyright 2020-2024 Open Text")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
