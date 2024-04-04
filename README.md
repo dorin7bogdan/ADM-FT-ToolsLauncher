@@ -25,7 +25,7 @@ This tool lets you run one or more of the following test types:
     * [File System Parameters](#filesystem-params-refs)
     * [Test Rerun Parameters (File System Only)](#test-rerun-params-refs)
     * [LoadRunner Parameters (File System Only)](#lr-params-refs)
-    * [UFT Digital Lab Parameters](#mc-params-refs)
+    * [Digital Lab Parameters](#mc-params-refs)
     * [Parallel Runner Parameters (File System Only)](#parallel-runner-params-refs)
     * [Non-public Parameters](#non-public-params-refs)
 - [.mtb File References](#mtb-file-refs)
@@ -62,7 +62,7 @@ The follwoing types of parameters are supported:
 * [File System Parameters](#filesystem-params-refs)
 * [Test Rerun Parameters (File System Only)](#test-rerun-params-refs)
 * [Load Runner Parameters (File System Only)](#lr-params-refs)
-* [UFT Digital Lab Parameters](#mc-params-refs)
+* [Digital Lab Parameters](#mc-params-refs)
 * [ParallelRunner Parameters (File System Only)](#parallel-runner-params-refs)
 * [Non-public Parameters](#non-public-params-refs)
 
@@ -149,10 +149,10 @@ The following parameters are used for **LoadRunner** tests.
 | `ScriptRTS{i}` | string | script name | (*Optional*) (**FOR LOADRUNNER TESTS ONLY**) Defines a list of scripts for which the runtime settings (attributes) are set. The placeholder `{i}` is used to define multiple scripts, starting from `1`, for example, `ScriptRTS1=sc1`, `ScriptRTS2=demo`. |
 | `AdditionalAttribute{i}` | string | {script-name};{attr-name};{attr-value};{attr-description} | (*Optional*) (**FOR LOADRUNNER TESTS ONLY**) Defines a list of runtime settings (attributes) for scripts set by `ScriptRTS{i}` parameters.<br/><br/>The value consists of four components separated by semicolons (`;`). The first one spedifies the script for which the attributes are used; the next three components are: attribute name, attribute value, and attribute description.<br/><br/>For example, the value `sc1;a1;valx;this is a demo attribute` represents an attribute to be set for the script `sc1` with attribute name `a1`, value `valx`, and description `this is a demo attribute`. |
 
-#### <a name="mc-params-refs"></a>UFT Digital Lab Parameters
+#### <a name="mc-params-refs"></a>Digital Lab Parameters
 > Go to [Table Of Contents](#fttools-launcher-toc)
 
-The following parameters are used for connecting to **UFT Digital Lab** (formerly **UFT Mobile / Mobile Center**) when running tests.
+The following parameters are used for connecting to **Digital Lab** (formerly **UFT Mobile / Mobile Center**) when running tests.
 
 | Name | Type | Value | Remarks |
 | ---- | ---- | ---- | ---- |
