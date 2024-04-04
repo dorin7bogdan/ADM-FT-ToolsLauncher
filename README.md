@@ -25,7 +25,7 @@ This tool lets you run one or more of the following test types:
     * [File System Parameters](#filesystem-params-refs)
     * [Test Rerun Parameters (File System Only)](#test-rerun-params-refs)
     * [LoadRunner Parameters (File System Only)](#lr-params-refs)
-    * [UFT Mobile Parameters](#mc-params-refs)
+    * [UFT Digital Lab Parameters](#mc-params-refs)
     * [Parallel Runner Parameters (File System Only)](#parallel-runner-params-refs)
     * [Non-public Parameters](#non-public-params-refs)
 - [.mtb File References](#mtb-file-refs)
@@ -62,7 +62,7 @@ The follwoing types of parameters are supported:
 * [File System Parameters](#filesystem-params-refs)
 * [Test Rerun Parameters (File System Only)](#test-rerun-params-refs)
 * [Load Runner Parameters (File System Only)](#lr-params-refs)
-* [UFT Mobile Parameters](#mc-params-refs)
+* [UFT Digital Lab Parameters](#mc-params-refs)
 * [ParallelRunner Parameters (File System Only)](#parallel-runner-params-refs)
 * [Non-public Parameters](#non-public-params-refs)
 
@@ -118,6 +118,7 @@ The File System parameters are used to launch tests stored in the file system. A
 | `fsReportPath{i}` | string | directory path | (*Optional*) The explicit location in which to save the test report for the test specified in `Test{i}`. If both the `fsReportPath` and `fsReportPath{i}` are specified, the `fsReportPath{i}` takes precedence over the `fsReportPath`.<br/><br/>This parameter is ignored if a `.mtb` or `.mtbx` batch file is specified in `Test{i}`. |
 | `fsUftRunMode` | string | `Normal` _or_ _`Fast`_ | (*Optional*) Specifies the run mode when running UFT One tests. Default = `Fast` run mode. |
 | `cancelRunOnFailure`  | boolean | `true` _or_ _`false`_ | (*Optional*) Specifies whether to cancel the run when a UFT One test fails, so that the subsequent tests will be skipped. Default = `false`. |
+| `leaveUftOpenIfVisible`  | boolean | `true` _or_ _`false`_ | (*Optional*) Specifies whether to use the existing UFT One instance if there is one open and visible before running the test run. Otherwise, before each test, any open instance of UFT One is closed and a new instance is opened. Default = `false`.|
 
 #### <a name="test-rerun-params-refs"></a>Test Rerun Parameters (File System Only)
 > Go to [Table Of Contents](#fttools-launcher-toc)
@@ -148,10 +149,10 @@ The following parameters are used for **LoadRunner** tests.
 | `ScriptRTS{i}` | string | script name | (*Optional*) (**FOR LOADRUNNER TESTS ONLY**) Defines a list of scripts for which the runtime settings (attributes) are set. The placeholder `{i}` is used to define multiple scripts, starting from `1`, for example, `ScriptRTS1=sc1`, `ScriptRTS2=demo`. |
 | `AdditionalAttribute{i}` | string | {script-name};{attr-name};{attr-value};{attr-description} | (*Optional*) (**FOR LOADRUNNER TESTS ONLY**) Defines a list of runtime settings (attributes) for scripts set by `ScriptRTS{i}` parameters.<br/><br/>The value consists of four components separated by semicolons (`;`). The first one spedifies the script for which the attributes are used; the next three components are: attribute name, attribute value, and attribute description.<br/><br/>For example, the value `sc1;a1;valx;this is a demo attribute` represents an attribute to be set for the script `sc1` with attribute name `a1`, value `valx`, and description `this is a demo attribute`. |
 
-#### <a name="mc-params-refs"></a>UFT Mobile Parameters
+#### <a name="mc-params-refs"></a>UFT Digital Lab Parameters
 > Go to [Table Of Contents](#fttools-launcher-toc)
 
-The following parameters are used for connecting to **UFT Mobile** (formerly **Mobile Center**) when running tests.
+The following parameters are used for connecting to **UFT Digital Lab** (formerly **UFT Mobile / Mobile Center**) when running tests.
 
 | Name | Type | Value | Remarks |
 | ---- | ---- | ---- | ---- |
@@ -168,7 +169,8 @@ The following parameters are used for connecting to **UFT Mobile** (formerly **M
 | `MobileProxySetting_Authentication` | integer | _`0`_ _or_ `1` | (*Optional*) Indicates whether the proxy requires authentication.<br/><br/>Specify `1` to enable proxy authentication. Default = `0` (no proxy authentication).<br/><br/>Relevant only when the `MobileUseProxy` parameter is set to `1` (use proxy) and `MobileProxyType` parameter is set to `0` (http proxy). |
 | `MobileProxySetting_UserName` | string | proxy user name | [**Mandatory** if `MobileUseProxy` is set to `1` and `MobileProxyType` is set to `0` and `MobileProxySetting_Authentication` is set to `1`] The user name to use when connecting to the proxy server.<br/><br/>Takes effect only when the `MobileUseProxy` parameter is set to `1` (use proxy) and `MobileProxyType` parameter is set to `0` (http proxy) and `MobileProxySetting_Authentication` parameter is set to `1`. |
 | `MobileProxySetting_PasswordBasicAuth` | string | base64-encoded string | **CAUTION: This password is simply encoded in base64 format which can be easily decoded by anyone. Use secure means to transmit the parameter file to prevent sensitive information from being exposed.**<br/><br/>(*Optional*) The password encoded in base64 format which is used to connect to the proxy server. |
-| `mobileinfo` | string | data in JSON format | (*Optional*) This parameter correpsonds to the mobile configurations set via the **Record and Run Settings** dialog box in UFT One.<br/><br/>This parameter is optional in most cases, however, in some circumstances it might be required in order to instruct UFT One to launch a specific mobile deivce and application before running the mobile test.<br/><br/>Although it is possible to compose the JSON string manually, it is strongly recommended to fetch the JSON string by first setting up the mobile configuration in UFT One's **Record and Run Settings** dialog box and then getting the data from the registry at `HKEY_CURRENT_USER\SOFTWARE\Mercury Interactive\QuickTest Professional\MicTest\AddIn Manager\Mobile\Startup Settings\JOB_SETTINGS`, value name `_default`. A typical JSON string could start from text `{"RnRType":-1,`... |
+| `mobileinfo` | string | data in JSON format | (*Optional*) The device and application to launch before running the mobile test.<br/><br/>This parameter is similar to the mobile configurations set via the **Record and Run Settings** dialog box in UFT One.<br/>Use this parameter if you want your run to override the settings set up in UFT One, or if you don't want to set those.<br/><br/>To compose this JSON string, we recommend setting up the mobile configuration in UFT One's **Record and Run Settings** dialog box and then getting the data from the registry at `HKEY_CURRENT_USER\SOFTWARE\Mercury Interactive\QuickTest Professional\MicTest\AddIn Manager\Mobile\Startup Settings\JOB_SETTINGS`, value name `_default`. A typical JSON string could start from text `{"RnRType":-1,`... |
+| `cloudbrowserinfo` | string | "**url**={URL}; **os**={OS}; **browser**={Name}; **version**={Version}; **region**={Location}" | (*Optional*) The browser and web application to use for the web test.<br/><br/>This parameter is similar to the web configurations set via the **Record and Run Settings** dialog box in UFT One.<br/>Use this parameter if you want your run to override the settings set up in UFT One, or if you don't want to set those.<br/><br/>Specify the operating system and geographical location in which you want the browser to run, as well as the browser type and version.  Optionally, specify the URL of the web application to load when the browser opens.<br/>To see which values are available for these keys, open the **Digital Lab > Browser Lab** page.<br/><br/>Example: *cloudbrowserinfo*=`"url=www.advantageshopping.com;os=Windows Server 2022;browser=Firefox;version=latest;region=Europe (Frankfurt)"`|
 
 #### <a name="parallel-runner-params-refs"></a>ParallelRunner Parameters (File System Only)
 > Go to [Table Of Contents](#fttools-launcher-toc)

@@ -66,7 +66,7 @@ namespace HpToolsLauncher
         private const string TEST = "Test";
         private const string LEAVE_UFT_OPEN_IF_VISIBLE = "leaveUftOpenIfVisible";
         private const string FS_UFT_RUN_MODE = "fsUftRunMode";
-        private const string CLOUD_BROWSER = "cloudBrowser";
+        private const string CLOUD_BROWSER_INFO = "cloudbrowserinfo";
         private const string MOBILE_INFO = "mobileinfo";
         private const string CANCEL_RUN_ON_FAILURE = "cancelRunOnFailure";
         private const string FS_REPORT_PATH = "fsReportPath";
@@ -775,10 +775,10 @@ namespace HpToolsLauncher
                     }
 
                     CloudBrowser cloudBrowser = null;
-                    string strCloudBrowser = _ciParams.GetOrDefault(CLOUD_BROWSER).Trim();
-                    if (!strCloudBrowser.IsNullOrEmpty())
+                    string cloudBrowserInfo = _ciParams.GetOrDefault(CLOUD_BROWSER_INFO).Trim();
+                    if (!cloudBrowserInfo.IsNullOrEmpty())
                     {
-                        CloudBrowser.TryParse(strCloudBrowser, out cloudBrowser);
+                        CloudBrowser.TryParse(cloudBrowserInfo, out cloudBrowser);
                     }
                     DigitalLab digitalLab = new(mcConnectionInfo, mobileinfo, cloudBrowser);
 
