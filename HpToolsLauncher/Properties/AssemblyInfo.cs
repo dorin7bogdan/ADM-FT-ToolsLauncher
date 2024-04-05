@@ -5,7 +5,7 @@
  * __________________________________________________________________
  * MIT License
  *
- * Copyright 2012-2023 Open Text
+ * Copyright 2012-2024 Open Text
  *
  * The only warranties for products and services of Open Text and
  * its affiliates and licensors ("Open Text") are as may be set forth
@@ -41,7 +41,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("retail")]
 [assembly: AssemblyCompany("OpenText")]
 [assembly: AssemblyProduct("UFT One CI Utilities")]
-[assembly: AssemblyCopyright("Copyright 2020-2023 Open Text")]
+[assembly: AssemblyCopyright("Copyright 2020-2024 Open Text")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -63,6 +63,6 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.34.1000")]
+[assembly: AssemblyVersion("2024.2.0.0")]
 //[assembly: AssemblyFileVersion("1.0")]
 [assembly: AssemblyInformationalVersion("1.0-beta")]

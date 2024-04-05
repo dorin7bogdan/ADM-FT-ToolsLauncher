@@ -5,7 +5,7 @@
  * __________________________________________________________________
  * MIT License
  *
- * Copyright 2012-2023 Open Text
+ * Copyright 2012-2024 Open Text
  *
  * The only warranties for products and services of Open Text and
  * its affiliates and licensors ("Open Text") are as may be set forth
@@ -37,9 +37,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using HpToolsLauncher.Interfaces;
-using HpToolsLauncher.Common;
 
-namespace HpToolsLauncher
+namespace HpToolsLauncher.Common
 {
     public class JunitXmlBuilder : IXmlBuilder
     {

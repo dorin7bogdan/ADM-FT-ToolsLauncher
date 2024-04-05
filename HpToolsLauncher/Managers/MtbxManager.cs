@@ -5,7 +5,7 @@
  * __________________________________________________________________
  * MIT License
  *
- * Copyright 2012-2023 Open Text
+ * Copyright 2012-2024 Open Text
  *
  * The only warranties for products and services of Open Text and
  * its affiliates and licensors ("Open Text") are as may be set forth
@@ -64,7 +64,7 @@ namespace HpToolsLauncher
          </Mtbx>
         */
 
-        private const string HTL_MTBXSCHEMA_XSD = "HpToolsLauncher.Common.MtbxSchema.xsd";
+        private const string HTL_MTBXSCHEMA_XSD = "HpToolsLauncher.Properties.MtbxSchema.xsd";
         private const string TEST = "Test";
         private const string PATH = "path";
         private const string REPORT_PATH = "reportPath";

@@ -104,8 +104,8 @@
     <Compile Include="Interfaces\IFileSysTestRunner.cs" />
     <Compile Include="Interfaces\IXmlBuilder.cs" />
     <Compile Include="Managers\IniManager.cs" />
-    <Compile Include="JunitXml\JunitXmlBuilder.cs" />
-    <Compile Include="JunitXml\junit.cs">
+    <Compile Include="Common\JunitXmlBuilder.cs" />
+    <Compile Include="Properties\junit.cs">
       <DependentUpon>junit.xsd</DependentUpon>
       <SubType>code</SubType>
     </Compile>
@@ -154,10 +154,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="JunitXml\junit.xsd">
+    <None Include="Properties\junit.xsd">
       <SubType>Designer</SubType>
     </None>
-    <EmbeddedResource Include="Common\MtbxSchema.xsd">
+    <EmbeddedResource Include="Properties\MtbxSchema.xsd">
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>

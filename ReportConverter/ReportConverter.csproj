@@ -6,11 +6,11 @@
     <Version>1.0-beta</Version>
     <Authors>OpenText or one of its affiliates.</Authors>
     <Product>UFT One CI Utilities</Product>
-    <Copyright>© Copyright 2023 OpenText or one of its affiliates.</Copyright>
+    <Copyright>© Copyright 2024 OpenText or one of its affiliates.</Copyright>
     <Description>A command-line tool that converts UFT report to other formats.</Description>
     <RepositoryUrl>https://github.com/MicroFocus/ADM-FT-ToolsLauncher</RepositoryUrl>
-    <AssemblyVersion>1.0.23.1000</AssemblyVersion>
-    <FileVersion>1.0.23.1000</FileVersion>
+    <AssemblyVersion>2024.2.0.0</AssemblyVersion>
+    <FileVersion>2024.2.0.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net6.0|AnyCPU'">
