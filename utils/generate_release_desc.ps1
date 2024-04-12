@@ -1,11 +1,11 @@
 #### START - NEED TO MODIFY ON EVERY RELEASE ####
-$Path = 'D:\Work\Git\Azure\ADM-FT-ToolsLauncher\FTTools-v1.0-beta-rev14'
-
+$ver = "v24.2.0"
+$Path = "D:\Work\Git\Azure\ADM-FT-ToolsLauncher\FTTools-$ver"
 $tags = @{
-    FTToolsLauncher = "v1.0-beta-rev14";
-    FTToolsAborter = "v1.0-beta-rev14";
-    LRAnalysisLauncher = "v1.0-beta-rev14";
-    ReportConverter = "v1.0-beta-rev14"
+    FTToolsLauncher = $ver;
+    FTToolsAborter = $ver;
+    LRAnalysisLauncher = $ver;
+    ReportConverter = $ver
 }
 
 $newFeatures = @(
