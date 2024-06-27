@@ -112,6 +112,7 @@ namespace HpToolsLauncher
         private readonly string _mobileInfo = uftProps.DigitalLab?.MobileInfo;
         private readonly CloudBrowser _cloudBrowser = uftProps.DigitalLab?.CloudBrowser;
         private readonly bool _leaveUftOpenIfVisible = uftProps.LeaveUftOpenIfVisible;
+        private readonly Type _type = Type.GetTypeFromProgID(QT_APP);
 
         #region QTP
 
@@ -160,8 +161,6 @@ namespace HpToolsLauncher
             {
                 ConsoleWriter.WriteLine($"{DateTime.Now.ToString(Launcher.DateFormat)} {Resources.LaunchingTestingTool}");
 
-                var type = Type.GetTypeFromProgID(QT_APP);
-
                 lock (_lockObject)
                 {
                     // before creating qtp automation object which creates UFT process, try to check if the UFT process already exists
@@ -175,7 +174,7 @@ namespace HpToolsLauncher
                     }
 
                     // this will create UFT process
-                    _qtpApplication = Activator.CreateInstance(type) as Application;
+                    CreateQtpInstance();
 
                     // try to get qtp status via qtp automation object, this might fail if UFT is launched and waiting for user input on addins manage window
                     // status: Not launched / Ready / Busy / Running / Recording / Waiting / Paused
@@ -983,6 +982,23 @@ namespace HpToolsLauncher
 
             _qtpParameters = null;
             _qtpParamDefs = null;
+        }
+
+        private void CreateQtpInstance(int numOfRetry = 0)
+        {
+            try
+            {
+                _qtpApplication = Activator.CreateInstance(_type) as Application;
+            }
+            catch
+            {
+                if (numOfRetry > 5)
+                    throw;
+
+                ConsoleWriter.WriteLine($"Failed to create QTP instance, retrying in 10 seconds ...");
+                Thread.Sleep(10000);
+                CreateQtpInstance(++numOfRetry);
+            }
         }
 
         #endregion
