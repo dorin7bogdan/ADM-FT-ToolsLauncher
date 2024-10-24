@@ -373,10 +373,16 @@ namespace HpToolsLauncher
                         if (runResult.TestState == TestState.Error)
                         {
                             ConsoleWriter.WriteErrLine(runResult.ErrorDesc);
+                            ts.errors++;
+                            _errors++;
+                        }
+                        else if (runResult.TestState == TestState.Failed)
+                        {
+                            ts.failures++;
+                            _fails++;
                         }
                     }
 
-                    UpdateCounters(runResult.TestState);
                     var testTotalTime = (DateTime.Now - testStart).TotalSeconds;
                     ConsoleWriter.WriteLine($"{DateTime.Now.ToString(Launcher.DateFormat)} Test completed in {((int)Math.Ceiling(testTotalTime))} seconds: {runResult.TestPath}");
                     if (!string.IsNullOrWhiteSpace(runResult.ReportLocation))
@@ -524,23 +530,6 @@ namespace HpToolsLauncher
             }
 
             return _blnRunCancelled;
-        }
-
-        /// <summary>
-        /// sums errors and failed tests
-        /// </summary>
-        /// <param name="testState"></param>
-        private void UpdateCounters(TestState testState)
-        {
-            switch (testState)
-            {
-                case TestState.Error:
-                    _errors += 1;
-                    break;
-                case TestState.Failed:
-                    _fails += 1;
-                    break;
-            }
         }
     }
 }
