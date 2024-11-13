@@ -190,7 +190,6 @@ namespace HpToolsLauncher
             Dispose(false);
         }
 
-
         //------------------------------- Connection to QC --------------------------
 
         /// <summary>
@@ -198,7 +197,7 @@ namespace HpToolsLauncher
         /// </summary>
         private void CreateTdConnection()
         {
-            Type type = Type.GetTypeFromProgID("TDApiOle80.TDConnection");
+            Type type = Type.GetTypeFromProgID("TDApiOle80.TDConnection.1");
 
             if (type == null)
             {
@@ -255,7 +254,6 @@ namespace HpToolsLauncher
         {
             return qcServerUrl + "/CommonMode_index.html";
         }
-
 
         /// <summary>
         /// checks Qc version (used for link format, 10 and smaller is old) 
@@ -321,7 +319,7 @@ namespace HpToolsLauncher
                     }
                     else
                     {
-                        TdConnection.InitConnectionWithApiKey(qcServerUrl, qcClientID, qcApiKey);
+                        TdConnection.InitConnectionWithApiKeyEx(qcServerUrl, qcClientID, qcApiKey);
                     }
                 }
                 catch (Exception ex)
@@ -480,7 +478,6 @@ namespace HpToolsLauncher
             }
             return sb.ToString().TrimEnd();
         }
-
 
         //------------------------------- Retrieve test sets, test lists and filter tests --------------------------
         /// <summary>
@@ -997,7 +994,6 @@ namespace HpToolsLauncher
             return true;
         }
 
-
         /// <summary>
         /// Validates test parameters
         /// </summary>
@@ -1020,7 +1016,6 @@ namespace HpToolsLauncher
             }
             return true;
         }
-
 
         /// <summary>
         /// Set test parameters for an API test
@@ -1172,7 +1167,6 @@ namespace HpToolsLauncher
             return activeRunDescription;
         }
 
-
         /// <summary>
         /// Runs a test set with given parameters (and a valid connection to the QC server)
         /// </summary>
@@ -1190,7 +1184,6 @@ namespace HpToolsLauncher
         public TestSuiteRunResults RunTestSet(string tsFolderName, string tsName, string testParameters, double timeout, QcRunMode runMode, string runHost,
                                               bool isFilterSelected, string filterByName, List<string> filterByStatuses, TestStorageType testStorageType)
         {
-
             string testSuiteName = tsName.TrimEnd();
             ITestSetFolder tsFolder = null;
             string testSet = string.Empty;
