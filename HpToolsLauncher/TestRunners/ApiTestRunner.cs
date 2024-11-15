@@ -49,7 +49,6 @@ namespace HpToolsLauncher
         private bool _stCanRun;
         private string _stExecuterPath = Directory.GetCurrentDirectory();
         private readonly IAssetRunner _runner;
-        private TimeSpan _timeout = TimeSpan.MaxValue;
         private Stopwatch _stopwatch = null;
         private RunCancelledDelegate _runCancelled;
 
@@ -57,11 +56,9 @@ namespace HpToolsLauncher
         /// constructor
         /// </summary>
         /// <param name="runner">parent runner</param>
-        /// <param name="timeout">the global timout</param>
-        public ApiTestRunner(IAssetRunner runner, TimeSpan timeout)
+        public ApiTestRunner(IAssetRunner runner)
         {
             _stopwatch = Stopwatch.StartNew();
-            _timeout = timeout;
             _stCanRun = TrySetSTRunner();
             _runner = runner;
         }
@@ -78,7 +75,7 @@ namespace HpToolsLauncher
             _stExecuterPath = Helper.GetSTInstallPath();
             if ((!string.IsNullOrEmpty(_stExecuterPath)))
             {
-                _stExecuterPath += "bin";
+                _stExecuterPath += Helper.BIN;
                 return true;
             }
             _stCanRun = false;

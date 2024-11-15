@@ -126,8 +126,8 @@
   <data name="ExceptionExternalProcess" xml:space="preserve">
     <value>Exception was thrown from external process.</value>
   </data>
-  <data name="ExceptionUserCancelled" xml:space="preserve">
-    <value>Run cancelled by user.</value>
+  <data name="ExceptionUserCanceledOrTimeoutExpired" xml:space="preserve">
+    <value>Run cancelled by user or timeout expired.</value>
   </data>
   <data name="QtpCleanupError" xml:space="preserve">
     <value>QTPActivity.TestCleanup - exception {0}</value>
@@ -265,8 +265,8 @@ Save the test in UFT One and then run it again.</value>
   <data name="GeneralStopAborted" xml:space="preserve">
     <value>Test run was aborted by user. Stopping all tests.</value>
   </data>
-  <data name="GeneralTestCanceled" xml:space="preserve">
-    <value>Test run was cancelled</value>
+  <data name="GeneralTestCanceledOrTimeoutExpired" xml:space="preserve">
+    <value>Test run was canceled / timeout expired.</value>
   </data>
   <data name="GeneralTimedOut" xml:space="preserve">
     <value>============== Job timed out! ==============

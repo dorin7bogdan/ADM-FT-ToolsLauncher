@@ -75,6 +75,7 @@ namespace HpToolsLauncher.Common
     public static class Helper
     {
         #region Constants
+        public const string BIN = "bin";
 
         private const string QTP_APPID_REG_KEY = @"SOFTWARE\Classes\AppID\{A67EB23A-1B8F-487D-8E38-A6A3DD150F0B}";
         private const string QTP_REG_ROOT = @"SOFTWARE\Mercury Interactive\QuickTest Professional\CurrentVersion";
@@ -103,7 +104,6 @@ namespace HpToolsLauncher.Common
         private const string MANUAL_RUNNER_PROC_REG_KEY = @"SOFTWARE\Hewlett-Packard\Manual Runner\Process";
 
         private const string UFT = "UFT";
-        private const string BIN = "bin";
         private const string STATUS = "status";
         private const string RESULT = "Result";
         private const string RES_RPT_NODE_DATA_XPATH = "/Results/ReportNode/Data";
@@ -124,6 +124,8 @@ namespace HpToolsLauncher.Common
         private const string PARALLEL_RUNNER_EXE = "ParallelRunner.exe";
         private const string LFT_RUNTIME = "LFTRuntime";
 
+        private const char BACKSLASH = '\\';
+        private const string BACKSLASH_ = "\\";
         #endregion
 
         public static Assembly HPToolsAssemblyResolver(object sender, ResolveEventArgs args)
@@ -349,15 +351,10 @@ namespace HpToolsLauncher.Common
 
             if (!ret.IsNullOrEmpty())
             {
-                ret = ret.EndsWith("\\") ? ret : (ret + "\\");
-                if (ret.EndsWith("\\bin\\"))
-                {
-                    int endIndex = ret.LastIndexOf("\\bin\\");
-                    if (endIndex != -1)
-                    {
-                        ret = ret.Substring(0, endIndex) + "\\";
-                    }
-                }
+                if (ret.TrimEnd(BACKSLASH).EndsWith($@"\{BIN}"))
+                    ret = ret.Substring(0, ret.LastIndexOf(BIN));
+
+                if (!ret.EndsWith(BACKSLASH_)) ret += BACKSLASH_;
             }
 
             return ret;
@@ -541,7 +538,7 @@ namespace HpToolsLauncher.Common
             procs?.ForEach(p => p.Kill());
         }
 
-        public static string GetParallelRunnerDirectory()
+        public static string GetParallelRunnerFullPathFile()
         {
             var uftFolder = GetSTInstallPath();
             if (uftFolder == null) return null;
@@ -604,7 +601,7 @@ namespace HpToolsLauncher.Common
                 resultFolderIndex += 1;
             }
 
-            return reportPath + "\\" + resultFolderName + resultFolderIndex;
+            return @$"{reportPath}\{resultFolderName}{resultFolderIndex}";
         }
 
         #region Report Related
@@ -643,7 +640,7 @@ namespace HpToolsLauncher.Common
         /// <returns> True if the report path was set, false otherwise </returns>
         public static bool TrySetTestReportPath(TestRunResults runResults, TestInfo testInfo, ref string errorReason)
         {
-            string testName = testInfo.TestName.Substring(testInfo.TestName.LastIndexOf('\\') + 1);
+            string testName = testInfo.TestName.Substring(testInfo.TestName.LastIndexOf(BACKSLASH) + 1);
             string reportLocation = GetNextResFolder(testInfo.ReportBaseDirectory, $"{testName}_");
 
             // set the report location for the run results

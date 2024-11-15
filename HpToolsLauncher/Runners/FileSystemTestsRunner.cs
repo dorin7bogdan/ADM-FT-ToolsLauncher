@@ -121,7 +121,8 @@ namespace HpToolsLauncher
             }
 
             _timeout = timeout;
-            ConsoleWriter.WriteLine("FileSystemTestRunner timeout is " + _timeout);
+            ConsoleWriter.WriteLine($@"FileSystemTestRunner timeout is {timeout:dd\:\:hh\:mm\:ss}");
+
             _stopwatch = Stopwatch.StartNew();
 
             _pollingInterval = controllerPollingInterval;
@@ -147,6 +148,7 @@ namespace HpToolsLauncher
             }
 
             //go over all sources, and create a list of all tests
+            bool hasLRTests = false;
             foreach (TestData source in sources)
             {
                 List<TestInfo> testGroup = [];
@@ -176,6 +178,7 @@ namespace HpToolsLauncher
                             {
                                 ReportPath = source.ReportPath
                             });
+                            hasLRTests = true;
                         }
                         else if (fi.Extension == Helper._MTB)
                         {
@@ -215,6 +218,12 @@ namespace HpToolsLauncher
                 ConsoleWriter.WriteLine(Resources.FsRunnerNoValidTests);
                 ConsoleWriter.ErrorSummaryLines?.ForEach(ConsoleWriter.WriteErrLine);
                 Environment.Exit((int)Launcher.ExitCodeEnum.Failed);
+            }
+
+            if (hasLRTests)
+            {
+                ConsoleWriter.WriteLine($"Controller Polling Interval: {controllerPollingInterval} seconds");
+                ConsoleWriter.WriteLine($@"PerScenarioTimeOut: {perScenarioTimeOutMinutes:dd\:\:hh\:mm\:ss}");
             }
 
             // if a custom path was provided,set the custom report path for all the valid tests(this will overwrite the default location)
@@ -355,7 +364,7 @@ namespace HpToolsLauncher
                         {
                             if (runResult.ErrorDesc.IsNullOrEmpty())
                             {
-                                runResult.ErrorDesc = RunCancelled() ? Resources.ExceptionUserCancelled : Resources.ExceptionExternalProcess;
+                                runResult.ErrorDesc = RunCancelled() ? Resources.ExceptionUserCanceledOrTimeoutExpired : Resources.ExceptionExternalProcess;
                             }
                             runResult.ReportLocation = null;
                             runResult.TestState = TestState.Error;
@@ -468,17 +477,17 @@ namespace HpToolsLauncher
             switch (type)
             {
                 case TestType.ST:
-                    runner = new ApiTestRunner(this, _timeout - _stopwatch.Elapsed);
+                    runner = new ApiTestRunner(this);
                     break;
                 case TestType.QTP:
-                    runner = new GuiTestRunner(this, _uftProps, _timeout - _stopwatch.Elapsed);
+                    runner = new GuiTestRunner(this, _uftProps);
                     break;
                 case TestType.LoadRunner:
                     AppDomain.CurrentDomain.AssemblyResolve += Helper.HPToolsAssemblyResolver;
-                    runner = new PerformanceTestRunner(this, _timeout, _pollingInterval, _perScenarioTimeOutMinutes, _ignoreErrorStrings, _displayController, _analysisTemplate, _summaryDataLogger, _scriptRTSSet);
+                    runner = new PerformanceTestRunner(this, _pollingInterval, _perScenarioTimeOutMinutes, _ignoreErrorStrings, _displayController, _analysisTemplate, _summaryDataLogger, _scriptRTSSet);
                     break;
                 case TestType.ParallelRunner:
-                    runner = new ParallelTestRunner(this, _timeout - _stopwatch.Elapsed, _uftProps.DigitalLab.ConnectionInfo, _parallelRunnerEnvironments);
+                    runner = new ParallelTestRunner(this, _uftProps.DigitalLab.ConnectionInfo, _parallelRunnerEnvironments);
                     break;
             }
 

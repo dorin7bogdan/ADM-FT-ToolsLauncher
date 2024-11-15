@@ -53,7 +53,6 @@ namespace HpToolsLauncher.TestRunners
         public const string ANALYSIS_LAUNCHER = @".\LRAnalysisLauncher.exe";
 
         private IAssetRunner _runner;
-        private TimeSpan _timeout;
         private int _pollingInterval;
         private TimeSpan _perScenarioTimeOutMinutes;
         private RunCancelledDelegate _runCancelled;
@@ -98,10 +97,9 @@ namespace HpToolsLauncher.TestRunners
         Dictionary<string, ControllerError> _errors;
         int _errorsCount;
         
-        public PerformanceTestRunner(IAssetRunner runner, TimeSpan timeout, int pollingInterval, TimeSpan perScenarioTimeOut, List<string> ignoreErrorStrings, bool displayController, string analysisTemplate, SummaryDataLogger summaryDataLogger, List<ScriptRTSModel> scriptRTSSet)
+        public PerformanceTestRunner(IAssetRunner runner, int pollingInterval, TimeSpan perScenarioTimeOut, List<string> ignoreErrorStrings, bool displayController, string analysisTemplate, SummaryDataLogger summaryDataLogger, List<ScriptRTSModel> scriptRTSSet)
         {
             this._runner = runner;
-            this._timeout = timeout;
             this._pollingInterval = pollingInterval;
             this._perScenarioTimeOutMinutes = perScenarioTimeOut;
             this._ignoreErrorStrings = ignoreErrorStrings;

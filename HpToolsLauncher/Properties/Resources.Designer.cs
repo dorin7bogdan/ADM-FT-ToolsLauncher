@@ -397,11 +397,11 @@ namespace HpToolsLauncher.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Run cancelled by user..
+        ///   Looks up a localized string similar to Run cancelled by user or timeout expired..
         /// </summary>
-        internal static string ExceptionUserCancelled {
+        internal static string ExceptionUserCanceledOrTimeoutExpired {
             get {
-                return ResourceManager.GetString("ExceptionUserCancelled", resourceCulture);
+                return ResourceManager.GetString("ExceptionUserCanceledOrTimeoutExpired", resourceCulture);
             }
         }
         
@@ -559,11 +559,11 @@ namespace HpToolsLauncher.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Test run was cancelled.
+        ///   Looks up a localized string similar to Test run was canceled / timeout expired..
         /// </summary>
-        internal static string GeneralTestCanceled {
+        internal static string GeneralTestCanceledOrTimeoutExpired {
             get {
-                return ResourceManager.GetString("GeneralTestCanceled", resourceCulture);
+                return ResourceManager.GetString("GeneralTestCanceledOrTimeoutExpired", resourceCulture);
             }
         }
         
