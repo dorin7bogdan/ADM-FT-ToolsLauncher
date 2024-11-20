@@ -63,18 +63,16 @@ namespace HpToolsLauncher.TestRunners
         // each test has a list of environments that it will run on
         private readonly Dictionary<string, List<string>> _environments;
         private readonly IAssetRunner _runner;
-        private TimeSpan _timeout;
         private readonly McConnectionInfo _mcConnectionInfo;
-        private string _parallelRunnerPath;
+        private string _parallelRunnerFullPathFile;
         private RunCancelledDelegate _runCancelled;
         private const int POLLING_TIME_MS = 500;
         private readonly bool _canRun = false;
         private const string PARALLEL_RUNNER_ARGS = "-o static -c \"{0}\"";
 
-        public ParallelTestRunner(IAssetRunner runner, TimeSpan timeout, McConnectionInfo mcConnectionInfo, Dictionary<string, List<string>> environments)
+        public ParallelTestRunner(IAssetRunner runner, McConnectionInfo mcConnectionInfo, Dictionary<string, List<string>> environments)
         {
             _runner = runner;
-            _timeout = timeout;
             _mcConnectionInfo = mcConnectionInfo;
             _environments = environments;
             _canRun = TrySetupParallelRunner();
@@ -88,11 +86,11 @@ namespace HpToolsLauncher.TestRunners
         /// </returns>
         private bool TrySetupParallelRunner()
         {
-            _parallelRunnerPath = Helper.GetParallelRunnerDirectory();
+            _parallelRunnerFullPathFile = Helper.GetParallelRunnerFullPathFile();
 
-            ConsoleWriter.WriteLine("Attempting to start parallel runner from: " + _parallelRunnerPath);
+            ConsoleWriter.WriteLine("Attempting to start parallel runner from: " + _parallelRunnerFullPathFile);
 
-            return _parallelRunnerPath != null && File.Exists(_parallelRunnerPath);
+            return _parallelRunnerFullPathFile != null && File.Exists(_parallelRunnerFullPathFile);
         }
 
         /// <summary>
@@ -308,7 +306,7 @@ namespace HpToolsLauncher.TestRunners
             runResults.ErrorDesc = null;
 
             // execute parallel runner and get the run result status
-            int exitCode = ExecuteProcess(_parallelRunnerPath, arguments, ref failureReason);
+            int exitCode = ExecuteProcess(_parallelRunnerFullPathFile, arguments, ref failureReason);
 
             // set the status of the build based on the exit code
             RunResultsFromParallelRunnerExitCode(runResults, exitCode, failureReason, ref errorReason);

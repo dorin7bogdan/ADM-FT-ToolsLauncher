@@ -295,7 +295,7 @@ namespace HpToolsLauncher
             var lastExitCode = ExitCode;
             Console.WriteLine($"The reported status is: {lastExitCode}");
 
-            if (_runType.Equals(TestStorageType.FileSystem))
+            if (_runType == TestStorageType.FileSystem)
             {
                 string onCheckFailedTests = _ciParams.GetOrDefault(ON_CHECK_FAILED_TEST);
                 _rerunFailedTests = !onCheckFailedTests.IsNullOrEmpty() && Convert.ToBoolean(onCheckFailedTests.ToLower());
@@ -326,7 +326,7 @@ namespace HpToolsLauncher
                     //runner instantiation failed (no tests to run or other problem)
                     if (runner == null)
                     {
-                        Environment.Exit((int)Launcher.ExitCodeEnum.Failed);
+                        Environment.Exit((int)ExitCodeEnum.Failed);
                     }
 
                     TestSuiteRunResults rerunResults = runner.Run();
@@ -344,7 +344,7 @@ namespace HpToolsLauncher
             }
 
             Console.WriteLine($"The final status is: {lastExitCode}");
-            Launcher.ExitCode = lastExitCode;
+            ExitCode = lastExitCode;
             Environment.ExitCode = (int)lastExitCode;
 
             // if the launcher reported Unstable, the process exit code might be 0 or non-zero
@@ -684,25 +684,20 @@ namespace HpToolsLauncher
                         jenkinsEnvVariables.Add(nameVal[0], nameVal[1]);
                     }
                     //parse the timeout into a TimeSpan
-                    TimeSpan timeout = TimeSpan.MaxValue;
+                    TimeSpan fsTimeout = TimeSpan.MaxValue;
                     if (_ciParams.ContainsKey(FS_TIMEOUT))
                     {
-                        string strTimeoutInSeconds = _ciParams[FS_TIMEOUT];
-                        if (strTimeoutInSeconds.Trim() != MINUS_ONE)
+                        string strTimeoutInSeconds = _ciParams[FS_TIMEOUT].Trim();
+                        if (strTimeoutInSeconds != MINUS_ONE)
                         {
-                            if (double.TryParse(strTimeoutInSeconds, out double timeoutInSeconds))
+                            if (double.TryParse(strTimeoutInSeconds, out double timeoutInSeconds) && timeoutInSeconds >= 0)
                             {
-                                if (timeoutInSeconds >= 0)
-                                {
-                                    timeout = TimeSpan.FromSeconds(Math.Round(timeoutInSeconds));
-                                }
+                                fsTimeout = TimeSpan.FromSeconds(Math.Round(timeoutInSeconds));
                             }
                         }
                     }
-                    ConsoleWriter.WriteLine($@"Launcher timeout is {timeout:dd\:\:hh\:mm\:ss}");
 
                     //LR specific values:
-                    //default values are set by JAVA code, in com.hpe.application.automation.tools.model.RunFromFileSystemModel.java
 
                     int pollingInterval = 30;
                     if (_ciParams.ContainsKey(CONTROLLER_POLLING_INTERVAL))
@@ -715,25 +710,20 @@ namespace HpToolsLauncher
                             }
                         }
                     }
-                    ConsoleWriter.WriteLine($"Controller Polling Interval: {pollingInterval} seconds");
 
                     TimeSpan perScenarioTimeOutMinutes = TimeSpan.MaxValue;
                     if (_ciParams.ContainsKey(PER_SCENARIO_TIMEOUT))
                     {
                         string strTimeoutInMinutes = _ciParams[PER_SCENARIO_TIMEOUT].Trim();
-                        if (strTimeoutInMinutes != MINUS_ONE)
+                        if (strTimeoutInMinutes != MINUS_ONE && double.TryParse(strTimeoutInMinutes, out double timeoutInMinutes))
                         {
-                            if (double.TryParse(strTimeoutInMinutes, out double timoutInMinutes))
+                            var totalSeconds = Math.Round(TimeSpan.FromMinutes(timeoutInMinutes).TotalSeconds);
+                            if (totalSeconds >= 0)
                             {
-                                var totalSeconds = Math.Round(TimeSpan.FromMinutes(timoutInMinutes).TotalSeconds);
-                                if (totalSeconds >= 0)
-                                {
-                                    perScenarioTimeOutMinutes = TimeSpan.FromSeconds(totalSeconds);
-                                }
+                                perScenarioTimeOutMinutes = TimeSpan.FromSeconds(totalSeconds);
                             }
                         }
                     }
-                    ConsoleWriter.WriteLine($@"{PER_SCENARIO_TIMEOUT}: {perScenarioTimeOutMinutes:dd\:\:hh\:mm\:ss}");
 
                     char[] delimiter = ['\n'];
                     List<string> ignoreErrorStrings = [];
@@ -829,7 +819,7 @@ namespace HpToolsLauncher
                     {
                         uftProps = new(leaveUftOpenIfVisible, digitalLab);
                     }
-                    runner = new FileSystemTestsRunner(validTests, timeout, uftProps, pollingInterval, perScenarioTimeOutMinutes, ignoreErrorStrings, jenkinsEnvVariables, parallelRunnerEnvironments, displayController, analysisTemplate, summaryDataLogger, scriptRTSSet, reportPath, cancelRunOnFailure, _xmlBuilder);
+                    runner = new FileSystemTestsRunner(validTests, fsTimeout, uftProps, pollingInterval, perScenarioTimeOutMinutes, ignoreErrorStrings, jenkinsEnvVariables, parallelRunnerEnvironments, displayController, analysisTemplate, summaryDataLogger, scriptRTSSet, reportPath, cancelRunOnFailure, _xmlBuilder);
 
                     break;
 

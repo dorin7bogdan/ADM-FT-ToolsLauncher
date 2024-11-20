@@ -43,21 +43,45 @@ namespace HpToolsLauncher.Common
 {
     public class TestInfo
     {
+        private const string TEST_INPUT_PARAMETERS_XML = "TestInputParameters.xml";
+        private const string SCHEMA = "Schema";
+        private const string XS = "xs";
+        private const string ARGUMENTS = "Arguments";
+        private const string ELEMENT = "element";
+        private const string NAME = "name";
+        private const string TYPE = "type";
+        private const string DATETIME = "datetime";
+        private const string DATE = "date";
+        private const string BOOLEAN = "boolean";
+        private const string YYYY_MM_ddTHH_mm_ss = "yyyy-MM-ddTHH:mm:ss";
+        private const string VALUES = "Values";
+        private const string COLON = ":";
+        private const char DOT = '.';
+        private const char UNDERSCORE = '_';
+        private readonly char[] _slashes = "\\/".ToCharArray();
+
+        List<TestParameterInfo> _params = [];
+        private string _testPath;
+        private string _testName;
+        private string _testGroup;
+        private string _dataTablePath;
+        private IterationInfo _iterationInfo;
+
         public TestInfo(string testPath)
         {
-            TestPath = testPath;
+            TestPath = Path.GetFullPath(testPath);
         }
         public string GenerateAPITestXmlForTest()
         {
             Dictionary<string, TestParameterInfo> paramDict = [];
-            foreach (var param in ParameterList)
+            foreach (var param in _params)
             {
                 paramDict.Add(param.Name.ToLower(), param);
             }
-            string paramXmlFileName = Path.Combine(TestPath, "TestInputParameters.xml");
+            string paramXmlFileName = Path.Combine(TestPath, TEST_INPUT_PARAMETERS_XML);
             XDocument doc = XDocument.Load(paramXmlFileName);
-            string schemaStr = doc.Descendants("Schema").First().Elements().First().ToString();
-            XElement xArgs = doc.Descendants("Arguments").FirstOrDefault();
+            string schemaStr = doc.Descendants(SCHEMA).First().Elements().First().ToString();
+            XElement xArgs = doc.Descendants(ARGUMENTS).FirstOrDefault();
             if (xArgs != null)
                 foreach (XElement arg in xArgs.Elements())
                 {
@@ -68,22 +92,22 @@ namespace HpToolsLauncher.Common
                         arg.Value = NormalizeParamValue(param);
                     }
                 }
-            string argumentSectionStr = doc.Descendants("Values").First().Elements().First().ToString();
+            string argumentSectionStr = doc.Descendants(VALUES).First().Elements().First().ToString();
             try
             {
                 XDocument doc1 = XDocument.Parse(argumentSectionStr);
                 XmlSchema schema = XmlSchema.Read(new MemoryStream(Encoding.ASCII.GetBytes(schemaStr), false), null);
 
-                XmlSchemaSet schemas = new XmlSchemaSet();
+                XmlSchemaSet schemas = new();
                 schemas.Add(schema);
 
-                string validationMessages = "";
+                string validationMessages = string.Empty;
                 doc1.Validate(schemas, (o, e) =>
                 {
                     validationMessages += e.Message + Environment.NewLine;
                 });
 
-                if (!string.IsNullOrWhiteSpace(validationMessages))
+                if (!validationMessages.IsNullOrWhiteSpace())
                     ConsoleWriter.WriteLine("parameter schema validation errors: \n" + validationMessages);
             }
             catch (Exception)
@@ -93,21 +117,20 @@ namespace HpToolsLauncher.Common
             return doc.ToString();
         }
 
-
         private string NormalizeParamValue(TestParameterInfo param)
         {
             switch (param.Type.ToLower())
             {
-                case "datetime":
-                case "date":
-                    string retStr = "";
+                case DATETIME:
+                case DATE:
+                    string retStr = string.Empty;
                     try
                     {
-                        retStr = ((DateTime)param.ParseValue()).ToString("yyyy-MM-ddTHH:mm:ss");
+                        retStr = ((DateTime)param.ParseValue()).ToString(YYYY_MM_ddTHH_mm_ss);
                     }
                     catch
                     {
-                        ConsoleWriter.WriteErrLine("incorrect dateTime value format in parameter: " + param.Name);
+                        ConsoleWriter.WriteErrLine($"incorrect dateTime value format in parameter: {param.Name}");
                     }
                     return retStr;
                 default:
@@ -115,49 +138,25 @@ namespace HpToolsLauncher.Common
             }
         }
 
-        private string NormalizeParamType(string pType)
+        public TestInfo(string testPath, string testName): this(testPath)
         {
-            return pType.ToLower() switch
-            {
-                "datetime" or "date" => "dateTime",
-                "any" or "string" or "password" => "string",
-                "int" or "integer" or "number" => "integer",
-                "bool" or "boolean" => "boolean",
-                _ => pType.ToLower(),
-            };
-        }
-
-        public TestInfo(string testPath, string testName)
-        {
-            TestPath = testPath;
-            TestName = testName;
-        }
-
-        public TestInfo(string testPath, string testName, string testGroup)
-        {
-            _testPath = testPath;
-            TestGroup = testGroup;
             _testName = testName;
         }
 
-        public TestInfo(string testPath, string testName, string testGroup, string testId)
+        public TestInfo(string testPath, string testName, string testGroup) : this(testPath, testName)
         {
-            _testPath = testPath;
-            TestGroup = testGroup;
-            _testName = testName;
+            _testGroup = testGroup;
+        }
+
+        public TestInfo(string testPath, string testName, string testGroup, string testId): this(testPath, testName, testGroup)
+        {
             TestId = testId;
         }
-
-        List<TestParameterInfo> _paramList = [];
-        string _testName;
-        string _testGroup;
-        string _dataTablePath;
-        IterationInfo _iterationInfo;
 
         public string TestGroup
         {
             get { return _testGroup; }
-            set { _testGroup = value.TrimEnd("\\/".ToCharArray()).Replace(".", "_"); }
+            set { _testGroup = value.TrimEnd(_slashes).Replace(DOT, UNDERSCORE); }
         }
 
         public string TestName
@@ -165,7 +164,6 @@ namespace HpToolsLauncher.Common
             get { return _testName; }
             set { _testName = value; }
         }
-        string _testPath;
 
         public string TestPath
         {
@@ -186,10 +184,10 @@ namespace HpToolsLauncher.Common
 
         public string TestId { get; set; }
 
-        public List<TestParameterInfo> ParameterList
+        public List<TestParameterInfo> Params
         {
-            get { return _paramList; }
-            set { _paramList = value; }
+            get { return _params; }
+            set { _params = value; }
         }
 
         public string DataTablePath
@@ -207,7 +205,7 @@ namespace HpToolsLauncher.Common
         internal Dictionary<string, object> GetParameterDictionaryForQTP()
         {
             Dictionary<string, object> retval = [];
-            foreach (var param in _paramList)
+            foreach (var param in _params)
             {
                 object val = param.ParseValue();
                 retval.Add(param.Name, val);

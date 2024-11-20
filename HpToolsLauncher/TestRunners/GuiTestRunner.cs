@@ -51,8 +51,7 @@ namespace HpToolsLauncher
     /// </summary>
     /// <param name="runNotifier"></param>
     /// <param name="useUftLicense"></param>
-    /// <param name="timeLeftUntilTimeout"></param>
-    public class GuiTestRunner(IAssetRunner runNotifier, UftProps uftProps, TimeSpan timeLeftUntilTimeout) : IFileSysTestRunner
+    public class GuiTestRunner(IAssetRunner runNotifier, UftProps uftProps) : IFileSysTestRunner
     {
         // Setting keys for mobile
         private const string MOBILE_HOST_ADDRESS = "ALM_MobileHostAddress";
@@ -100,7 +99,6 @@ namespace HpToolsLauncher
 
         private readonly IAssetRunner _runNotifier = runNotifier;
         private readonly object _lockObject = new();
-        private readonly TimeSpan _timeLeftUntilTimeout = timeLeftUntilTimeout;
         private readonly string _uftRunMode = uftProps.UftRunMode?.ToString();
         private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
         private Application _qtpApplication;
@@ -642,8 +640,8 @@ namespace HpToolsLauncher
                 if (_runCancelled())
                 {
                     testResults.TestState = TestState.Error;
-                    testResults.ErrorDesc = Resources.GeneralTestCanceled;
-                    ConsoleWriter.WriteLine(Resources.GeneralTestCanceled);
+                    testResults.ErrorDesc = Resources.GeneralTestCanceledOrTimeoutExpired;
+                    ConsoleWriter.WriteLine(Resources.GeneralTestCanceledOrTimeoutExpired);
                     result.IsSuccess = false;
                     return result;
                 }
@@ -655,36 +653,25 @@ namespace HpToolsLauncher
                 int slept = 0;
                 while (slept < 20000 && _qtpApplication.GetStatus().In([READY, WAITING], true))
                 {
-                    Thread.Sleep(50);
-                    slept += 50;
+                    Thread.Sleep(200);
+                    slept += 200;
                 }
 
-                while (!_runCancelled() && _qtpApplication.GetStatus().In([RUNNING, BUSY], true))
+                while (_qtpApplication.GetStatus().In([RUNNING, BUSY], true))
                 {
-                    Thread.Sleep(200);
-                    if (_timeLeftUntilTimeout - _stopwatch.Elapsed <= TimeSpan.Zero)
+                    Thread.Sleep(500);
+                    if (_runCancelled())
                     {
-                        _qtpApplication.Test.Stop();
+                        QTPTestCleanup();
+                        KillQtp();
                         testResults.TestState = TestState.Error;
-                        testResults.ErrorDesc = Resources.GeneralTimeoutExpired;
-                        ConsoleWriter.WriteLine(Resources.GeneralTimeoutExpired);
-
+                        testResults.ErrorDesc = Resources.GeneralTestCanceledOrTimeoutExpired;
+                        ConsoleWriter.WriteLine(Resources.GeneralTestCanceledOrTimeoutExpired);
                         result.IsSuccess = false;
                         return result;
                     }
                 }
 
-                if (_runCancelled())
-                {
-                    QTPTestCleanup();
-                    KillQtp();
-                    testResults.TestState = TestState.Error;
-                    testResults.ErrorDesc = Resources.GeneralTestCanceled;
-                    ConsoleWriter.WriteLine(Resources.GeneralTestCanceled);
-                    Launcher.ExitCode = Launcher.ExitCodeEnum.Aborted;
-                    result.IsSuccess = false;
-                    return result;
-                }
                 string lastError = _qtpApplication.Test.LastRunResults.LastError;
 
                 //read the lastError
@@ -767,10 +754,14 @@ namespace HpToolsLauncher
                 //error during run, process may have crashed (need to cleanup, close QTP and qtpRemote for next test to run correctly)
                 CleanUp();
 
-                //kill the qtp automation, to make sure it will run correctly next time
-                Process[] processes = Process.GetProcessesByName(QTPAUTOMATIONAGENT);
-                Process qtpAuto = processes.Where(p => p.SessionId == Process.GetCurrentProcess().SessionId).FirstOrDefault();
-                qtpAuto?.Kill();
+                try
+                {
+                    //kill the qtp automation, to make sure it will run correctly next time
+                    Process[] processes = Process.GetProcessesByName(QTPAUTOMATIONAGENT);
+                    Process qtpAuto = processes.Where(p => p.SessionId == Process.GetCurrentProcess().SessionId).FirstOrDefault();
+                    qtpAuto?.Kill();
+                }
+                catch { }
             }
         }
 
