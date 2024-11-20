@@ -248,7 +248,7 @@ namespace HpToolsLauncher
                         if (!paramNames.Contains(testParam.Name))
                         {
                             paramNames.Add(testParam.Name);
-                            col.ParameterList.Add(testParam);
+                            col.Params.Add(testParam);
                         }
                         else
                         {

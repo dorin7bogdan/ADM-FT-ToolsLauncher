@@ -295,7 +295,7 @@ namespace HpToolsLauncher
             var lastExitCode = ExitCode;
             Console.WriteLine($"The reported status is: {lastExitCode}");
 
-            if (_runType.Equals(TestStorageType.FileSystem))
+            if (_runType == TestStorageType.FileSystem)
             {
                 string onCheckFailedTests = _ciParams.GetOrDefault(ON_CHECK_FAILED_TEST);
                 _rerunFailedTests = !onCheckFailedTests.IsNullOrEmpty() && Convert.ToBoolean(onCheckFailedTests.ToLower());
@@ -326,7 +326,7 @@ namespace HpToolsLauncher
                     //runner instantiation failed (no tests to run or other problem)
                     if (runner == null)
                     {
-                        Environment.Exit((int)Launcher.ExitCodeEnum.Failed);
+                        Environment.Exit((int)ExitCodeEnum.Failed);
                     }
 
                     TestSuiteRunResults rerunResults = runner.Run();
@@ -344,7 +344,7 @@ namespace HpToolsLauncher
             }
 
             Console.WriteLine($"The final status is: {lastExitCode}");
-            Launcher.ExitCode = lastExitCode;
+            ExitCode = lastExitCode;
             Environment.ExitCode = (int)lastExitCode;
 
             // if the launcher reported Unstable, the process exit code might be 0 or non-zero
