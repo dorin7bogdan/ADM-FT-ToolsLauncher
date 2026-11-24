@@ -143,7 +143,6 @@ namespace HpToolsLauncher
         private static readonly string[] _one_true_yes = [ONE, TRUE, YES];
 
         private IXmlBuilder _xmlBuilder;
-        private bool _ciRun = false;
         private readonly JavaProperties _ciParams = [];
         private TestStorageType _runType;
         private readonly string _failOnUftTestFailed;
@@ -242,7 +241,6 @@ namespace HpToolsLauncher
         /// </summary>
         public void Run()
         {
-            _ciRun = true;
             if (_runType == TestStorageType.Unknown)
             {
                 if (_ciParams.ContainsKey(RUN_TYPE))
@@ -476,22 +474,22 @@ namespace HpToolsLauncher
                     }
 
                     string clientID = _ciParams.GetOrDefault(ALM_CLIENT_ID);
-                    string apiKey = string.Empty;
-                    if (_ciParams.ContainsKey(ALM_API_KEY_SECRET_BASIC_AUTH))
-                    {
-                        // base64 decode
-                        byte[] data = Convert.FromBase64String(_ciParams[ALM_API_KEY_SECRET_BASIC_AUTH]);
-                        apiKey = Encoding.Default.GetString(data);
-                    }
-                    else if (_ciParams.ContainsKey(ALM_API_KEY_SECRET))
-                    {
-                        apiKey = Encrypter.Decrypt(_ciParams[ALM_API_KEY_SECRET]);
-                    }
-
-                    string almRunHost = _ciParams.GetOrDefault(ALM_RUN_HOST);
-
                     string almPassword = string.Empty;
-                    if (_ciParams.ContainsKey(ALM_PASSWORD_BASIC_AUTH))
+                    string apiKey = string.Empty;
+                    if (isSSOEnabled)
+                    {
+                        if (_ciParams.ContainsKey(ALM_API_KEY_SECRET_BASIC_AUTH))
+                        {
+                            // base64 decode
+                            byte[] data = Convert.FromBase64String(_ciParams[ALM_API_KEY_SECRET_BASIC_AUTH]);
+                            apiKey = Encoding.Default.GetString(data);
+                        }
+                        else if (_ciParams.ContainsKey(ALM_API_KEY_SECRET))
+                        {
+                            apiKey = Encrypter.Decrypt(_ciParams[ALM_API_KEY_SECRET]);
+                        }
+                    }
+                    else if (_ciParams.ContainsKey(ALM_PASSWORD_BASIC_AUTH))
                     {
                         // base64 decode
                         byte[] data = Convert.FromBase64String(_ciParams[ALM_PASSWORD_BASIC_AUTH]);
@@ -502,6 +500,7 @@ namespace HpToolsLauncher
                         almPassword = Encrypter.Decrypt(_ciParams[ALM_PASSWORD]);
                     }
 
+                    string almRunHost = _ciParams.GetOrDefault(ALM_RUN_HOST);
                     string almTestSetsOrderByCriteria = _ciParams.GetOrDefault(ALM_TEST_SETS_ORDER_BY_CRITERIA);
 
                     //create an Alm runner
@@ -980,7 +979,7 @@ namespace HpToolsLauncher
                 if (results == null)
                     Environment.Exit((int)ExitCodeEnum.Failed);
 
-                if (_ciRun && _runType != TestStorageType.FileSystem) // for FileSystem the report is already generated inside FileSystemTestsRunner.Run()
+                if (_runType == TestStorageType.Alm) // for FileSystem the report is already generated inside FileSystemTestsRunner.Run()
                 {
                     InitXmlBuilder(resultsFile);
                     FileInfo fi = new(resultsFile);
@@ -988,6 +987,10 @@ namespace HpToolsLauncher
                     if (_xmlBuilder.CreateXmlFromRunResults(results, out error))
                     {
                         Console.WriteLine(Resources.SummaryReportGenerated, fi.FullName);
+                        if (_ciParams.GetOrDefault(GENERATE_JUNIT_REPORT).Trim().ToLower().In(_one_true_yes))
+                        {
+                            JUnitResultConverter.GenerateJUnitReport(resultsFile);
+                        }
                     }
                     else
                     {

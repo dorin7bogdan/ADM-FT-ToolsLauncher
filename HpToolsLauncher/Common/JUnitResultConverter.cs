@@ -49,6 +49,7 @@ namespace HpToolsLauncher.Common
     /// </summary>
     public class JUnitResultConverter
     {
+        private const string JUNIT_REPORT_FILENAME = "junitResult.xml";
         private const string TESTSUITES = "testsuites";
         private const string TESTSUITE = "testsuite";
         private const string TESTCASE = "testcase";
@@ -126,6 +127,29 @@ namespace HpToolsLauncher.Common
         {
             JUnitResultConverter converter = new(inputFile, outputFile, keepLongStdio);
             return converter.Convert() && converter.SaveFile();
+        }
+
+        public static void GenerateJUnitReport(string resultsFile)
+        {
+            string inputFile = Path.GetFullPath(resultsFile);
+            string outputFile = Path.Combine(Path.GetDirectoryName(inputFile), JUNIT_REPORT_FILENAME);
+            try
+            {
+                if (!File.Exists(inputFile))
+                {
+                    ConsoleWriter.WriteErrLine($"Failed to create JUnit report: results file [{inputFile}] not found.");
+                    return;
+                }
+
+                if (ConvertAndSave(inputFile, outputFile))
+                    ConsoleWriter.WriteLine($"{DateTime.Now.ToString(Launcher.DateFormat)} JUnit report is generated at: [{outputFile}]");
+                else
+                    ConsoleWriter.WriteErrLine($"Failed to create JUnit report: [{outputFile}]");
+            }
+            catch (Exception ex)
+            {
+                ConsoleWriter.WriteErrLine($"Failed to create JUnit report: {ex.Message}");
+            }
         }
 
         public bool Convert()

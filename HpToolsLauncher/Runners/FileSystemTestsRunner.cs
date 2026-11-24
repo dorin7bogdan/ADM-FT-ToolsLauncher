@@ -82,7 +82,6 @@ namespace HpToolsLauncher
         private const string UNKNOWN_TESTTYPE = "Unknown TestType";
         private const string NEW_LINE_AND_DASH_SEPARATOR = "\n-------------------------------------------------------------------------------------------------------";
         private const string REPORT = "Report";
-        private const string JUNIT_REPORT_FILENAME = "junitResult.xml";
         private const string STAR = "*";
         private const char SLASH = '/';
         private const string RPT_ZIP_GENERATED_MSG = "Test report archive is generated at: {0}";
@@ -450,7 +449,7 @@ namespace HpToolsLauncher
                     ZipTestReports(reportsToZip);
 
                 if (_generateJUnitReport)
-                    GenerateJUnitReport();
+                    JUnitResultConverter.GenerateJUnitReport(_xmlBuilder.XmlName);
 
                 activeRunDesc.NumTests = _tests.Count;
                 activeRunDesc.NumErrors = _errors;
@@ -465,29 +464,6 @@ namespace HpToolsLauncher
             }
 
             return activeRunDesc;
-        }
-
-        private void GenerateJUnitReport()
-        {
-            string inputFile = Path.GetFullPath(_xmlBuilder.XmlName);
-            string outputFile = Path.Combine(Path.GetDirectoryName(inputFile), JUNIT_REPORT_FILENAME);
-            try
-            {
-                if (!File.Exists(inputFile))
-                {
-                    ConsoleWriter.WriteErrLine($"Failed to create JUnit report: results file '{inputFile}' not found.");
-                    return;
-                }
-
-                if (JUnitResultConverter.ConvertAndSave(inputFile, outputFile))
-                    ConsoleWriter.WriteLine($"{DateTime.Now.ToString(Launcher.DateFormat)} JUnit report is generated at: {outputFile}");
-                else
-                    ConsoleWriter.WriteErrLine($"Failed to create JUnit report: {outputFile}");
-            }
-            catch (Exception ex)
-            {
-                ConsoleWriter.WriteErrLine($"Failed to create JUnit report: {ex.Message}");
-            }
         }
 
         private void DeletePreviousTestReports()
