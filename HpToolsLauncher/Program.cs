@@ -43,13 +43,12 @@ namespace HpToolsLauncher
     {
         Alm,
         FileSystem,
-        LoadRunner,
         Unknown
     }
 
     class Program
     {
-        private static readonly Dictionary<string, string> argsDictionary = [];
+        private static readonly Dictionary<string, string> argsDict = [];
 
         //[MTAThread]
         static void Main(string[] args)
@@ -63,7 +62,7 @@ namespace HpToolsLauncher
                 }
                 else
                 {
-                    Console.Error.WriteLine("The launcher tool exited with error code: {0}", code);
+                    Console.Error.WriteLine($"The launcher tool exited with error code: {code}");
                 }
             };
 
@@ -75,7 +74,7 @@ namespace HpToolsLauncher
                 return;
             }
             // show version?
-            if (args[0] == "-v" || args[0] == "-version" || args[0] == "/v")
+            if (args[0].In("-v", "-version", "/v"))
             {
                 Console.WriteLine(Assembly.GetEntryAssembly().GetName().Version.ToString());
                 Environment.Exit(0);
@@ -92,11 +91,10 @@ namespace HpToolsLauncher
             {
                 string key = args[i].StartsWith("-") ? args[i].Substring(1) : args[i];
                 string val = i + 1 < args.Count() ? args[i + 1].Trim() : string.Empty;
-                argsDictionary[key] = val;
+                argsDict[key] = val;
             }
-            string failOnTestFailed = "N";
-            argsDictionary.TryGetValue("runtype", out string runtype);
-            argsDictionary.TryGetValue("paramfile", out string propsFileName);
+            argsDict.TryGetValue("runtype", out string runtype);
+            argsDict.TryGetValue("paramfile", out string propsFileName);
             TestStorageType enmRuntype = TestStorageType.Unknown;
 
             if (!Enum.TryParse(runtype, true, out enmRuntype))
@@ -111,7 +109,7 @@ namespace HpToolsLauncher
             ShowTitle();
             ConsoleWriter.WriteLine(Resources.GeneralStarted);
 
-            Launcher apiRunner = new(failOnTestFailed, propsFileName, enmRuntype);
+            Launcher apiRunner = new(propsFileName, enmRuntype);
             if (apiRunner.IsParamFileEncodingNotSupported)
             {
                 Console.WriteLine(Resources.JavaPropertyFileBOMNotSupported);

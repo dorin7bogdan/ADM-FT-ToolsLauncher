@@ -145,7 +145,6 @@ namespace HpToolsLauncher
         private IXmlBuilder _xmlBuilder;
         private readonly JavaProperties _ciParams = [];
         private TestStorageType _runType;
-        private readonly string _failOnUftTestFailed;
         private static ExitCodeEnum _exitCode = ExitCodeEnum.Passed;
         private static bool _rerunFailedTests = false;
 
@@ -205,10 +204,9 @@ namespace HpToolsLauncher
         /// <summary>
         /// constructor
         /// </summary>
-        /// <param name="failOnTestFailed"></param>
         /// <param name="propsFileName"></param>
         /// <param name="runType"></param>
-        public Launcher(string failOnTestFailed, string propsFileName, TestStorageType runType)
+        public Launcher(string propsFileName, TestStorageType runType)
         {
             _runType = runType;
             if (propsFileName != null)
@@ -221,8 +219,6 @@ namespace HpToolsLauncher
                     return;
                 }
             }
-
-            _failOnUftTestFailed = failOnTestFailed.IsNullOrEmpty() ? N : failOnTestFailed;
         }
 
         public bool IsParamFileEncodingNotSupported { get; private set; }

@@ -428,7 +428,7 @@ namespace HpToolsLauncher
                     ConsoleWriter.WriteLine($"{DateTime.Now.ToString(Launcher.DateFormat)} Test completed in {((int)Math.Ceiling(testTotalTime))} seconds: {runResult.TestPath}");
                     if (!runResult.ReportLocation.IsNullOrWhiteSpace())
                     {
-                        ConsoleWriter.WriteLine($"{DateTime.Now.ToString(Launcher.DateFormat)} Test report is generated at: {runResult.ReportLocation}{NEW_LINE_AND_DASH_SEPARATOR}");
+                        ConsoleWriter.WriteLine($"{DateTime.Now.ToString(Launcher.DateFormat)} Test report is generated at: [{runResult.ReportLocation}]{NEW_LINE_AND_DASH_SEPARATOR}");
                     }
 
                     // Create or update the xml report. This function is called after each test execution in order to have a report available in case of job interruption
