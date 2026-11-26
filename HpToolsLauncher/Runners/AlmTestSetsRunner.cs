@@ -64,6 +64,7 @@ namespace HpToolsLauncher
         private const string ID = "ID";
         private const string NAME = "Name";
         private const string ORDERBY_MESSAGE = "Test sets will be executed in ascending order by {0}.";
+        private const string _QCBIN = "/qcbin";
 
         private ITDConnection13 TdConnection
         {
@@ -126,6 +127,8 @@ namespace HpToolsLauncher
             _runHost = runHost;
 
             _almServer = qcServer.Trim().TrimEnd('/', '\\');
+            if (!_almServer.IsNullOrEmpty() && !_almServer.EndsWithIgnoreCase(_QCBIN))
+                _almServer += _QCBIN;
             _almUser = qcUser;
             _almPassword = qcPassword;
             _almProject = qcProject;

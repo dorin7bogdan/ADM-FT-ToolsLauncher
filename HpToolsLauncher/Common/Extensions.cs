@@ -180,5 +180,11 @@ namespace HpToolsLauncher.Common
             if (source == null || value == null) return false;
             return source.StartsWith(value, StringComparison.OrdinalIgnoreCase);
         }
+
+        public static bool EndsWithIgnoreCase(this string source, string value)
+        {
+            if (source == null || value == null) return false;
+            return source.EndsWith(value, StringComparison.OrdinalIgnoreCase);
+        }
     }
 }
